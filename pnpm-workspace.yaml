@@ -1,0 +1,11 @@
+minimumReleaseAge: 10080
+# Nothing third-party belongs in a minimumReleaseAgeExclude: a cooldown failure is met
+# by lowering the window for that one install and restoring it, and the lockfile then
+# carries the resolution, so --frozen-lockfile needs no exception.
+
+# @hey-api/json-schema-ref-parser pins js-yaml 4.2.0 exactly, which carries three
+# high advisories (GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj, GHSA-2883-xcg3-v3hh).
+# Dev-only, and it only ever parses our own pinned spec. Drop this once the
+# generator's own pin moves past 4.3.2.
+overrides:
+  "@hey-api/json-schema-ref-parser>js-yaml": "4.3.2"

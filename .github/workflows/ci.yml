@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      # Builds, then runs the suite, test/dist.test.mjs included: no `node:` import
+      # and no `process` anywhere in what ships.
+      - run: pnpm run test
+
+  # dist loaded as a module in a real headless Chromium, the API stubbed in the page.
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The Chromium build the pinned playwright-core drives, rather than whatever a
+      # newer Playwright would fetch.
+      - run: pnpm exec playwright-core install --with-deps --no-shell chromium
+      - run: pnpm run test:browser

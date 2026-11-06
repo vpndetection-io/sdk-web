@@ -1,0 +1,37 @@
+name: Integration
+
+# Exercises the package as PUBLISHED on npm, against staging. CI covers this
+# working tree; nothing there would notice a `files` list that ships no `dist`,
+# an export map a consumer cannot resolve, or a release that never landed.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+  schedule:
+    # Off the hour on purpose: scheduled runs bunched at :00 are queued behind
+    # everyone else's and can be dropped entirely under load.
+    - cron: '37 6 * * *'
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      # npm, not pnpm, and no cache: the point is the install a stranger gets.
+      # The script skips with a reason when nothing is published yet; a tier
+      # whose key is missing skips from inside the suite.
+      #
+      # One org per plan tier, because the tier comes from the ORG rather than
+      # from the key. A secret that does not exist interpolates to an empty
+      # string here, which the suite treats as absent.
+      - run: node scripts/run.mjs
+        working-directory: integration
+        env:
+          VPNDETECTION_STAGING_KEY_FREE: ${{ secrets.VPNDETECTION_STAGING_KEY_FREE }}
+          VPNDETECTION_STAGING_KEY_STARTER: ${{ secrets.VPNDETECTION_STAGING_KEY_STARTER }}
+          VPNDETECTION_STAGING_KEY_SCALE: ${{ secrets.VPNDETECTION_STAGING_KEY_SCALE }}
+          VPNDETECTION_STAGING_KEY_MAX: ${{ secrets.VPNDETECTION_STAGING_KEY_MAX }}

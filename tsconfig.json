@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        // A browser library: ES2022's language and library and the DOM, no Node types, so a
+        // reference to `process`, `Buffer` or anything newer than the browsers it supports fails here.
+        "types": [],
+        "lib": ["ES2022", "DOM"],
+        "target": "ES2022",
+        // NodeNext so every relative import names its `.js` file, which a browser loading dist needs.
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        // Dependencies' types as a browser build resolves them.
+        "customConditions": ["browser"],
+        "noUncheckedSideEffectImports": false,
+        "strict": true,
+        "declaration": true,
+        "outDir": "dist",
+        "rootDir": "src",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
+}
