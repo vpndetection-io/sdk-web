@@ -1,3 +1,13 @@
 # Changelog
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
+
+## 1.0.0 - 2026-11-06
+
+### Features
+
+- Look up an address, or many in one call, from a browser: `lookup` and `lookupBatch`, with bogons answered locally, retries, per-attempt timeouts and the errors every VPNDetection library raises ([`15ac1bd`](https://github.com/vpndetection-io/sdk-web/commit/15ac1bd0baa5ecd2729e708ade9d633edf88c04c))
+- Ask about the address the browser calls from with `myIp`, and what a key may spend with `myEntitlement` ([`15ac1bd`](https://github.com/vpndetection-io/sdk-web/commit/15ac1bd0baa5ecd2729e708ade9d633edf88c04c))
+- Cache answers per client, concurrent misses sharing one request, with an optional `store` that keeps them across a page reload or an extension's worker restart ([`15ac1bd`](https://github.com/vpndetection-io/sdk-web/commit/15ac1bd0baa5ecd2729e708ade9d633edf88c04c))
+- Sign a person in with the OAuth authorization code flow: `authorizationUrl`, `exchangeAuthorizationCode`, `exchangeRefreshToken`, `revoke`, `metadata`, and PKCE from Web Crypto with `createPkce` and `pkceChallenge` ([`15ac1bd`](https://github.com/vpndetection-io/sdk-web/commit/15ac1bd0baa5ecd2729e708ade9d633edf88c04c))
+- ES modules with types and nothing of Node.js, from npm or from jsDelivr in a module script ([`15ac1bd`](https://github.com/vpndetection-io/sdk-web/commit/15ac1bd0baa5ecd2729e708ade9d633edf88c04c))
