@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.2.2 - 2026-11-11
+
+### Fixes
+
+- Say Unlimited, the free plan, never the Unlimited tier, and re-pin the spec ([`733c842`](https://github.com/vpndetection-io/sdk-web/commit/733c8420db722748896446a4b663ac8c7156d3b8))
+
 ## 1.2.1 - 2026-11-11
 
 ### Fixes
