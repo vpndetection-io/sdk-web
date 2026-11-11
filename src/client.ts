@@ -42,8 +42,8 @@ export interface CacheOptions {
 export interface Options {
     /**
      * Your API key. Omit it to look up without one: a lookup then answers
-     * `ip`, `is_vpn`, the Tor and relay members, `location` and `asn`, up to
-     * 60 a minute from each address, and a batch is refused as `unauthorized`.
+     * `ip`, `is_vpn`, the Tor and relay members, `location` and `asn`, with no
+     * daily or monthly cap, and a batch is refused as `unauthorized`.
      * A key in a web page is readable by anyone who opens the page.
      */
     apiKey?: string;
