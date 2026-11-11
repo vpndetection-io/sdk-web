@@ -59,9 +59,9 @@ for (const rung of RUNGS.filter((r) => r.secret !== null)) {
 
         assert.ok(facts.length > 0 && facts.every((fact) => fact.carriedKey), 'the key never reached the wire');
         if (rung.tier === 'trial') {
-            // An organization on no paid plan is on its trial, whose plan keeps the
-            // field tier `free`, so a decoder from before the trial still reads it.
-            assert.equal(entitlement.plan.key, 'trial');
+            // The rung's key is on the free plan, Unlimited, whose daily trial it is
+            // named for: its plan and its field tier are both `free`.
+            assert.equal(entitlement.plan.key, 'free');
             assert.equal(entitlement.plan.tier, 'free');
         } else {
             assert.equal(entitlement.plan.tier, rung.tier);
@@ -74,8 +74,8 @@ test('each tier serves a superset of the tier below', { skip: LADDER }, async ()
     let below = null;
     for (const rung of observableRungs()) {
         const fixture = await answerFor(rung);
-        // trial_expired marks a trial key's answers, and no other: it is not a field
-        // a tier serves.
+        // trial_expired marks a free-plan key's answers, and no other: it is not a
+        // field a tier serves.
         const fields = new Set(Object.keys(fixture.result.raw).filter((f) => f !== 'trial_expired'));
         console.log(`${rung.tier}: ${fields.size} fields`);
         if (below !== null) {
@@ -99,16 +99,16 @@ test('each tier serves a superset of the tier below', { skip: LADDER }, async ()
 
 const TRIAL_RUNG = RUNGS.find((rung) => rung.tier === 'trial');
 
-test("a trial key's answer is a paid one or Unlimited's, and says which", { skip: skipFor(TRIAL_RUNG) }, async () => {
+test("a free-plan key's answer is a paid one or Unlimited's, and says which", { skip: skipFor(TRIAL_RUNG) }, async () => {
     const raw = (await answerFor(TRIAL_RUNG)).result.raw;
 
-    assert.equal(typeof raw.trial_expired, 'boolean', 'a trial key answers trial_expired');
+    assert.equal(typeof raw.trial_expired, 'boolean', 'a free-plan key answers trial_expired');
     // The organization's first 100 lookups of the UTC day are answered in full,
     // and the rest as Unlimited's: which half a run sees depends on the day.
     assert.equal('is_hosting' in raw, !raw.trial_expired, 'is_hosting is served exactly while the day lasts');
 });
 
-test("a trial key's batch of two is refused as a bad request, once", { skip: skipFor(TRIAL_RUNG) }, async () => {
+test("a free-plan key's batch of two is refused as a bad request, once", { skip: skipFor(TRIAL_RUNG) }, async () => {
     const sent = [];
     const trial = clientFor(TRIAL_RUNG, (fact) => sent.push(fact));
 
@@ -116,7 +116,7 @@ test("a trial key's batch of two is refused as a bad request, once", { skip: ski
 
     for (const ip of [PROBE, '8.8.8.8']) {
         const refused = got.get(ip);
-        assert.ok(refused instanceof VPNDetectionError, `${ip}: a trial key's batch of two must fail`);
+        assert.ok(refused instanceof VPNDetectionError, `${ip}: a free-plan key's batch of two must fail`);
         assert.equal(refused.kind, 'bad_request');
         assert.equal(refused.status, 402);
         assert.equal(refused.retryable, false);
@@ -124,7 +124,7 @@ test("a trial key's batch of two is refused as a bad request, once", { skip: ski
     assert.deepEqual(sent.map((fact) => fact.path), ['/batch'], 'one request, never retried');
 });
 
-test("a trial key's batch of one is answered", { skip: skipFor(TRIAL_RUNG) }, async () => {
+test("a free-plan key's batch of one is answered", { skip: skipFor(TRIAL_RUNG) }, async () => {
     const got = await clientFor(TRIAL_RUNG).lookupBatch([PROBE]);
 
     const answer = got.get(PROBE);
