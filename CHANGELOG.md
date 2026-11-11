@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.1.0 - 2026-11-11
+
+### Features
+
+- Re-pin the spec to 2026.11.11: a lookup without a key answers more ([`5e9e697`](https://github.com/vpndetection-io/sdk-web/commit/5e9e697510866323355301fe436579331306d403))
+
 ## 1.0.0 - 2026-11-06
 
 ### Features
