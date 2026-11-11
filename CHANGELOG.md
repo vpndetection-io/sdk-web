@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.2.1 - 2026-11-11
+
+### Fixes
+
+- Say the free plan's daily trial, never a trial key, and re-pin the spec ([`a526fdf`](https://github.com/vpndetection-io/sdk-web/commit/a526fdfc20533f009037aabd7d90dcd8b87934cd))
+
 ## 1.2.0 - 2026-11-11
 
 ### Features
