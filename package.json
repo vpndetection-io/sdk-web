@@ -1,6 +1,6 @@
 {
     "name": "vpndetection-web",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Official browser client library for the VPNDetection API. Detect VPNs, proxies, Tor, hosting and CDN IPs.",
     "type": "module",
     "packageManager": "pnpm@12.12.1",
