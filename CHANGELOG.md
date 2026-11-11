@@ -2,7 +2,11 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
-## 1.1.1 - 2026-11-11
+## 1.2.0 - 2026-11-11
+
+### Features
+
+- Add trialExpired for a trial key's answers, and re-pin the spec ([`7ad7fa1`](https://github.com/vpndetection-io/sdk-web/commit/7ad7fa19adea105059ac3e591108089825139750))
 
 ### Fixes
 
