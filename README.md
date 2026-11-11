@@ -30,7 +30,7 @@ It runs in Chrome and Edge 109, Firefox 115 ESR and Safari 16.4 or newer. TypeSc
 
 ## Usage
 
-**No API key needed to start.** Without a key a lookup answers `ip`, `is_vpn`, Tor and relay detection, `location` and `asn`, unlimited, with no daily or monthly cap. In a page the address calling is the visitor's, so `myIp` tells you about the visitor:
+**No API key needed to start.** The Unlimited tier answers `ip`, `is_vpn`, Tor and relay detection, `location` and `asn`, with no daily or monthly cap, for [non-commercial use](https://vpndetection.io/terms#no-key). Commercial use, or a batch lookup, needs a key, a free one included. In a page the address calling is the visitor's, so `myIp` tells you about the visitor:
 
 ```js
 import { VPNDetection } from 'vpndetection-web';
@@ -48,7 +48,7 @@ console.log(result.asn?.name);          // who runs the announcing network
 
 ### With an API key
 
-Where the key stays private (see above), a free key adds every other flag, `is_hosting`, `is_cdn` and the four proxy flags, at 50,000 lookups a month, and every paid plan answers every field, the provider, confidence and last-seen detail behind each flag included. The paid plans differ only in how many lookups they include. Batch lookups need a key. Create one in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), a free key adds every other flag, `is_hosting`, `is_cdn` and the four proxy flags, at 50,000 lookups a month, and every paid plan answers every field, the provider, confidence and last-seen detail behind each flag included. The paid plans differ only in how many lookups they include. Create a key in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
