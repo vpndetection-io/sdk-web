@@ -58,7 +58,14 @@ for (const rung of RUNGS.filter((r) => r.secret !== null)) {
         const entitlement = await clientFor(rung, (fact) => facts.push(fact)).myEntitlement();
 
         assert.ok(facts.length > 0 && facts.every((fact) => fact.carriedKey), 'the key never reached the wire');
-        assert.equal(entitlement.plan.tier, rung.tier);
+        if (rung.tier === 'trial') {
+            // An organization on no paid plan is on its trial, whose plan keeps the
+            // field tier `free`, so a decoder from before the trial still reads it.
+            assert.equal(entitlement.plan.key, 'trial');
+            assert.equal(entitlement.plan.tier, 'free');
+        } else {
+            assert.equal(entitlement.plan.tier, rung.tier);
+        }
         assert.ok(Number.isInteger(entitlement.usage.requests), 'usage.requests is not a whole number');
     });
 }
@@ -67,7 +74,9 @@ test('each tier serves a superset of the tier below', { skip: LADDER }, async ()
     let below = null;
     for (const rung of observableRungs()) {
         const fixture = await answerFor(rung);
-        const fields = new Set(Object.keys(fixture.result.raw));
+        // trial_expired marks a trial key's answers, and no other: it is not a field
+        // a tier serves.
+        const fields = new Set(Object.keys(fixture.result.raw).filter((f) => f !== 'trial_expired'));
         console.log(`${rung.tier}: ${fields.size} fields`);
         if (below !== null) {
             for (const field of below.fields) {
@@ -82,8 +91,45 @@ test('each tier serves a superset of the tier below', { skip: LADDER }, async ()
                 );
             }
         }
-        below = { tier: rung.tier, fields: fields };
+        if (rung.tier !== 'trial') {
+            below = { tier: rung.tier, fields: fields };
+        }
     }
+});
+
+const TRIAL_RUNG = RUNGS.find((rung) => rung.tier === 'trial');
+
+test("a trial key's answer is a paid one or Unlimited's, and says which", { skip: skipFor(TRIAL_RUNG) }, async () => {
+    const raw = (await answerFor(TRIAL_RUNG)).result.raw;
+
+    assert.equal(typeof raw.trial_expired, 'boolean', 'a trial key answers trial_expired');
+    // The organization's first 100 lookups of the UTC day are answered in full,
+    // and the rest as Unlimited's: which half a run sees depends on the day.
+    assert.equal('is_hosting' in raw, !raw.trial_expired, 'is_hosting is served exactly while the day lasts');
+});
+
+test("a trial key's batch of two is refused as a bad request, once", { skip: skipFor(TRIAL_RUNG) }, async () => {
+    const sent = [];
+    const trial = clientFor(TRIAL_RUNG, (fact) => sent.push(fact));
+
+    const got = await trial.lookupBatch([PROBE, '8.8.8.8']);
+
+    for (const ip of [PROBE, '8.8.8.8']) {
+        const refused = got.get(ip);
+        assert.ok(refused instanceof VPNDetectionError, `${ip}: a trial key's batch of two must fail`);
+        assert.equal(refused.kind, 'bad_request');
+        assert.equal(refused.status, 402);
+        assert.equal(refused.retryable, false);
+    }
+    assert.deepEqual(sent.map((fact) => fact.path), ['/batch'], 'one request, never retried');
+});
+
+test("a trial key's batch of one is answered", { skip: skipFor(TRIAL_RUNG) }, async () => {
+    const got = await clientFor(TRIAL_RUNG).lookupBatch([PROBE]);
+
+    const answer = got.get(PROBE);
+    assert.ok(!(answer instanceof Error), `${PROBE} failed: ${answer?.message}`);
+    assert.equal(typeof answer.raw.trial_expired, 'boolean');
 });
 
 test('a field a higher tier serves is absent on a lower one, never false', { skip: LADDER }, async () => {
@@ -157,21 +203,21 @@ test('a batch without a key is refused as unauthorized, once, and its bogon stil
     assert.deepEqual(sent.map((fact) => fact.path), ['/batch'], 'one request, never retried');
 });
 
-const FREE_RUNG = RUNGS.find((rung) => rung.tier === 'free');
+const PAID_RUNG = RUNGS.find((rung) => rung.tier === 'starter');
 
-test('a batch collapses duplicates and keeps bogons off the wire', { skip: skipFor(FREE_RUNG) }, async () => {
-    // A batch needs a key, and the free one is the cheapest that has it. Asserted
-    // per request rather than on a count, so a retry against a wobbling staging
-    // cannot read as a failure to deduplicate.
+test('a batch collapses duplicates and keeps bogons off the wire', { skip: skipFor(PAID_RUNG) }, async () => {
+    // A batch needs a paid plan, and starter is the cheapest. Asserted per request
+    // rather than on a count, so a retry against a wobbling staging cannot read as
+    // a failure to deduplicate.
     const sent = [];
-    const counting = clientFor(FREE_RUNG, (fact) => sent.push(fact));
+    const counting = clientFor(PAID_RUNG, (fact) => sent.push(fact));
 
     const got = await counting.lookupBatch([PROBE, '8.8.8.8', PROBE, '10.0.0.1', '8.8.8.8']);
 
     assert.deepEqual([...got.keys()], [PROBE, '8.8.8.8', '10.0.0.1']);
     assert.ok(sent.length > 0, 'the batch reached nothing');
     for (const fact of sent) {
-        assert.ok(fact.carriedKey, 'the free key reached the wire');
+        assert.ok(fact.carriedKey, 'the paid key reached the wire');
         assert.equal(fact.path, '/batch', 'one POST /batch per chunk, never a lookup per address');
         assert.deepEqual([...fact.ips].sort(), [PROBE, '8.8.8.8'].sort(), 'what the chunk carried');
     }

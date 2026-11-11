@@ -28,7 +28,7 @@ export const LOOKUP_TYPES: Record<string, Kind> = {
     is_cdn: 'boolean', is_resproxy: 'boolean', is_dcproxy: 'boolean', is_mobproxy: 'boolean',
     is_pubproxy: 'boolean', vpn: 'object', hosting: 'object', relay: 'object', tor: 'object', cdn: 'object',
     resproxy: 'object', dcproxy: 'object', mobproxy: 'object', pubproxy: 'object', location: 'object',
-    asn: 'object',
+    asn: 'object', trial_expired: 'boolean',
 };
 export const VPN_DETAIL_TYPES: Record<string, Kind> = {
     provider: 'string', last_seen: 'date', confidence: 'string', method: 'string',

@@ -11,17 +11,19 @@
 // and every comparison against it is vacuously true.
 
 // Ascending, one rung per plan tier. `widens` is what the rung promises against
-// whichever observable rung sits below it: a free key serves strictly more than
-// no key, and the first paid tier strictly more than a free key; every paid
-// plan answers the same fields, so a higher paid tier only keeps what the one
-// under it serves.
+// whichever observable rung sits below it: the first paid tier serves strictly
+// more than no key; every paid plan answers the same fields, so a higher paid
+// tier only keeps what the one under it serves. The trial key's answer is a paid
+// one for its organization's first 100 lookups of the UTC day and Unlimited's
+// after, so it promises nothing and is never the rung a later one is compared
+// against.
 //
 // Field COUNTS are deliberately absent. Pinning "starter answers seven fields"
 // turns a pricing change into a red SDK build; the relation between the tiers is
 // what the client actually has to keep.
 export const RUNGS = [
     { tier: 'unauth', secret: null, widens: false },
-    { tier: 'free', secret: 'VPNDETECTION_STAGING_KEY_FREE', widens: true },
+    { tier: 'trial', secret: 'VPNDETECTION_STAGING_KEY_FREE', widens: false },
     { tier: 'starter', secret: 'VPNDETECTION_STAGING_KEY_STARTER', widens: true },
     { tier: 'scale', secret: 'VPNDETECTION_STAGING_KEY_SCALE', widens: false },
     { tier: 'max', secret: 'VPNDETECTION_STAGING_KEY_MAX', widens: false },

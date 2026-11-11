@@ -31,6 +31,11 @@ export interface Result {
     isDcproxy?: boolean;
     isMobproxy?: boolean;
     isPubproxy?: boolean;
+    /**
+     * On a Trial key's answers only: `false` while the organization's 100 full answers for the
+     * UTC day last, `true` once the answer is Unlimited's.
+     */
+    trialExpired?: boolean;
 
     vpn?: VpnDetail;
     hosting?: ClassDetail;
@@ -43,11 +48,11 @@ export interface Result {
     pubproxy?: PubproxyDetail;
 
     /**
-     * Where the address is, on every keyed answer: every key present, empty strings where it is
-     * not known.
+     * Where the address is, on every answer, with or without a key: every key present, empty
+     * strings where it is not known.
      */
     location?: Location;
-    /** The AS announcing the address, on every keyed answer: `asn` is 0 where none does. */
+    /** The AS announcing the address, on every answer, with or without a key: `asn` is 0 where none does. */
     asn?: Asn;
 
     /** The response exactly as it came off the wire, with its original names. */
@@ -73,6 +78,7 @@ export function toResult(body: LookupResponse): Result {
     copyFlag(body, r, 'is_dcproxy', 'isDcproxy');
     copyFlag(body, r, 'is_mobproxy', 'isMobproxy');
     copyFlag(body, r, 'is_pubproxy', 'isPubproxy');
+    copyFlag(body, r, 'trial_expired', 'trialExpired');
     copyDetail(body, r, 'vpn', 'vpn');
     copyDetail(body, r, 'hosting', 'hosting');
     copyDetail(body, r, 'relay', 'relay');
@@ -90,7 +96,7 @@ export function toResult(body: LookupResponse): Result {
 function copyFlag(
     body: LookupResponse, out: Result,
     from: keyof LookupResponse, to: 'isHosting' | 'isRelay' | 'isTor' | 'isCdn'
-        | 'isResproxy' | 'isDcproxy' | 'isMobproxy' | 'isPubproxy',
+        | 'isResproxy' | 'isDcproxy' | 'isMobproxy' | 'isPubproxy' | 'trialExpired',
 ) {
     if (from in body && body[from] !== undefined) {
         out[to] = body[from] as boolean;

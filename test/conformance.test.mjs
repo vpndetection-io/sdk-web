@@ -269,7 +269,7 @@ test('an entry error is classified by its status', async () => {
     const stub = stubFetch({
         '1.1.1.1': { body: { ip: '1.1.1.1', is_vpn: false } },
         '8.8.8.8': {
-            status: 429, body: { error: 'monthly request allowance spent; upgrade your plan for more lookups' },
+            status: 429, body: { error: 'overage cap reached; raise or remove it in Billing' },
         },
         '9.9.9.9': { status: 500, body: { error: 'lookup failed' } },
     });
