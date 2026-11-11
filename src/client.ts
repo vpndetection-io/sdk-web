@@ -41,8 +41,9 @@ export interface CacheOptions {
 
 export interface Options {
     /**
-     * Your API key. Omit it entirely to use the free tier, which answers
-     * `ip` and `is_vpn` and allows 1000 requests per day per source address.
+     * Your API key. Omit it to look up without one: a lookup then answers
+     * `ip`, `is_vpn`, the Tor and relay members, `location` and `asn`, up to
+     * 60 a minute from each address, and a batch is refused as `unauthorized`.
      * A key in a web page is readable by anyone who opens the page.
      */
     apiKey?: string;
@@ -265,7 +266,9 @@ export class VPNDetection {
      * and a chunk that fails as a whole marks every address in it. A per-call
      * `concurrency` below 1 is refused as `bad_request` before anything is sent.
      * An IPv4-mapped address is looked up as the IPv4 address it carries, and its
-     * answer keyed as you passed it.
+     * answer keyed as you passed it. The batch endpoint needs an API key, a free
+     * one included: without one, every address sent to it carries an
+     * `unauthorized` error.
      */
     async lookupBatch(
         ips: Iterable<string>, options: BatchOptions = {},

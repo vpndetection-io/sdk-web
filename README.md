@@ -30,7 +30,7 @@ It runs in Chrome and Edge 109, Firefox 115 ESR and Safari 16.4 or newer. TypeSc
 
 ## Usage
 
-**No API key needed to start.** Without a key, a lookup answers `ip` and `is_vpn`, up to 1,000 a day per source address. In a page that address is the visitor's, so each visitor's lookups count against their own allowance, and `myIp` tells you about the visitor:
+**No API key needed to start.** Without a key a lookup answers `ip`, `is_vpn`, Tor and relay detection, `location` and `asn`, with no daily or monthly cap: up to 60 lookups a minute from each address. In a page that address is the visitor's, so each visitor's lookups count against their own limit, and `myIp` tells you about the visitor:
 
 ```js
 import { VPNDetection } from 'vpndetection-web';
@@ -41,22 +41,22 @@ const me = await client.myIp();
 console.log(me.isVpn);       // is this visitor on a VPN?
 
 const result = await client.lookup('45.83.91.1');
-console.log(result.isVpn);   // true
+console.log(result.isVpn);              // true
+console.log(result.location?.country);  // the ISO 3166 country code
+console.log(result.asn?.name);          // who runs the announcing network
 ```
 
 ### With an API key
 
-Where the key stays private (see above), a free key adds Tor and relay detection, where the address is and the AS that announces it. Every paid plan answers every field, the same on each, and the plans differ only in how many lookups they include. Create a key in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), a free key adds every other flag, `is_hosting`, `is_cdn` and the four proxy flags, at 50,000 lookups a month, and every paid plan answers every field, the provider, confidence and last-seen detail behind each flag included. The paid plans differ only in how many lookups they include. Batch lookups need a key. Create one in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
 
 const result = await client.lookup('45.83.91.1');
 console.log(result.isVpn);              // true
-console.log(result.location?.country);  // the ISO 3166 country code
-console.log(result.asn?.name);          // who runs the announcing network
+console.log(result.isHosting);          // with any key, a free one included
 console.log(result.vpn?.provider);      // on a paid plan
-console.log(result.isHosting);          // on a paid plan
 ```
 
 An extension can sign its user in rather than ask them to paste a key: see Sign in with OAuth below.
@@ -83,7 +83,7 @@ Usage counts against the anniversary of your subscription, not the calendar mont
 
 ### Batch lookup
 
-Look up as many addresses as you like in one call. Bogons and cached answers are handled locally, and the rest go to the batch endpoint in chunks of up to 1000, in parallel:
+Look up as many addresses as you like in one call. Bogons and cached answers are handled locally, and the rest go to the batch endpoint in chunks of up to 1000, in parallel. The batch endpoint needs an API key, a free one included:
 
 ```js
 const results = await client.lookupBatch(['45.83.91.1', '8.8.8.8', '1.1.1.1']);
@@ -206,7 +206,7 @@ try {
 
 `kind` is one of `bad_request`, `unauthorized`, `forbidden`, `rate_limited`, `quota_exceeded`, `server_error` or `network`.
 
-Note that `rate_limited` and `quota_exceeded` both arrive as HTTP 429 and are not the same thing. A rate limit is when the API faces extreme traffic bursts and so retrying later works; but a spent quota needs your allowance raised or the window to roll over. The library retries rate limits for you, but not if your quota is exceeded.
+Note that `rate_limited` and `quota_exceeded` both arrive as HTTP 429 and are not the same thing. A rate limit is when the API faces extreme traffic bursts, or a lookup without a key passes 60 a minute, and so retrying later works; but a spent quota needs your allowance raised or the window to roll over. The library retries rate limits for you, but not if your quota is exceeded.
 
 A request the browser never got an answer to is a retryable `network` error carrying what the browser said: offline, blocked by an extension, or refused by the page's Content-Security-Policy.
 
@@ -246,11 +246,12 @@ The library is ES2022 and needs only what a browser has, `fetch` and, for PKCE, 
 
 ### Absent is not false
 
-Without a key only `ip` and `isVpn` come back, and a free key adds Tor, relay, `location` and `asn`. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
+Without a key a lookup leaves out `isHosting`, `isCdn` and the four proxy flags, and a free key leaves out `vpn` and the detail behind each flag. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
 
 ```js
 result.isHosting ?? false        // when you only want the flag
-result.isHosting === undefined   // not in your plan
+result.isHosting === undefined   // without a key: not in your plan
+result.vpn === undefined         // on a free key: not in your plan
 ```
 
 ## Other Libraries

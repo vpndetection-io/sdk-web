@@ -226,7 +226,7 @@ test('the key is sent in the Authorization header and nowhere else', async () =>
     }
 });
 
-// No key, no header: a page using the free tier sends nothing a preflight would
+// No key, no header: a page using no key sends nothing a preflight would
 // have to admit on a lookup.
 test('a client without a key sends no Authorization header', async () => {
     const seen = [];

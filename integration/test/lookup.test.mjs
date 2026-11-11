@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { VPNDetection, isBogon } from 'vpndetection-web';
+import { VPNDetection, VPNDetectionError, isBogon } from 'vpndetection-web';
 
 import {
     INSTALLED_VERSION, MEMBERS, PROBE, RESULT_PROP, STAGING, answerFor, assertServedByTier,
@@ -25,7 +25,7 @@ const LADDER = observableRungs().length > 1
     ? false
     : 'no tier secret is set, so there is no ladder to compare';
 
-test('an unauthenticated lookup answers ip and is_vpn', async () => {
+test('a lookup without a key answers ip and is_vpn at the least', async () => {
     const fixture = await answerFor(UNAUTH_RUNG);
 
     assert.equal(fixture.result.raw.ip, PROBE);
@@ -142,17 +142,36 @@ test('a bogon is answered without touching the network', async () => {
     }
 });
 
-test('a batch collapses duplicates and keeps bogons off the wire', async () => {
-    // Asserted per request rather than on a count, so a retry against a wobbling
-    // staging cannot read as a failure to deduplicate.
+test('a batch without a key is refused as unauthorized, once, and its bogon still answered', async () => {
     const sent = [];
-    const counting = clientFor(UNAUTH_RUNG, (fact) => sent.push(fact));
+    const keyless = clientFor(UNAUTH_RUNG, (fact) => sent.push(fact));
+
+    const got = await keyless.lookupBatch([PROBE, '10.0.0.1']);
+
+    assert.equal(got.get('10.0.0.1').isBogon, true);
+    const refused = got.get(PROBE);
+    assert.ok(refused instanceof VPNDetectionError, 'a batch without a key must fail');
+    assert.equal(refused.kind, 'unauthorized');
+    assert.equal(refused.status, 401);
+    assert.equal(refused.retryable, false);
+    assert.deepEqual(sent.map((fact) => fact.path), ['/batch'], 'one request, never retried');
+});
+
+const FREE_RUNG = RUNGS.find((rung) => rung.tier === 'free');
+
+test('a batch collapses duplicates and keeps bogons off the wire', { skip: skipFor(FREE_RUNG) }, async () => {
+    // A batch needs a key, and the free one is the cheapest that has it. Asserted
+    // per request rather than on a count, so a retry against a wobbling staging
+    // cannot read as a failure to deduplicate.
+    const sent = [];
+    const counting = clientFor(FREE_RUNG, (fact) => sent.push(fact));
 
     const got = await counting.lookupBatch([PROBE, '8.8.8.8', PROBE, '10.0.0.1', '8.8.8.8']);
 
     assert.deepEqual([...got.keys()], [PROBE, '8.8.8.8', '10.0.0.1']);
     assert.ok(sent.length > 0, 'the batch reached nothing');
     for (const fact of sent) {
+        assert.ok(fact.carriedKey, 'the free key reached the wire');
         assert.equal(fact.path, '/batch', 'one POST /batch per chunk, never a lookup per address');
         assert.deepEqual([...fact.ips].sort(), [PROBE, '8.8.8.8'].sort(), 'what the chunk carried');
     }
