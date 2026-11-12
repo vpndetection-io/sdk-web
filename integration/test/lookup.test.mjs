@@ -192,7 +192,8 @@ test('a batch without a key is refused as unauthorized, once, and its bogon stil
     const sent = [];
     const keyless = clientFor(UNAUTH_RUNG, (fact) => sent.push(fact));
 
-    const got = await keyless.lookupBatch([PROBE, '10.0.0.1']);
+    // Two addresses on the wire: a keyless batch of one is answered as its lookup.
+    const got = await keyless.lookupBatch([PROBE, '8.8.8.8', '10.0.0.1']);
 
     assert.equal(got.get('10.0.0.1').isBogon, true);
     const refused = got.get(PROBE);
