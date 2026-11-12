@@ -268,8 +268,10 @@ export class VPNDetection {
      * `concurrency` below 1 is refused as `bad_request` before anything is sent.
      * An IPv4-mapped address is looked up as the IPv4 address it carries, and its
      * answer keyed as you passed it. The batch endpoint needs a paid plan:
-     * without a key every address sent to it carries an `unauthorized` error,
-     * and a free-plan key's batch of two or more a `bad_request` (HTTP 402).
+     * without a key every address in a request of two or more carries an
+     * `unauthorized` error, and a free-plan key's request of two or more a
+     * `bad_request` (HTTP 402). A request of one address is answered as its
+     * lookup would be.
      */
     async lookupBatch(
         ips: Iterable<string>, options: BatchOptions = {},
