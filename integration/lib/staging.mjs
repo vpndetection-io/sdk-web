@@ -22,10 +22,12 @@ export const INSTALLED_VERSION = require('vpndetection-web/package.json').versio
 // One entry per dataset the API answers about. `required` is what a POPULATED
 // detail object carries on every tier; `optional` is the max-only remainder,
 // which is absent rather than empty on a lower plan.
-const CLASS_KEYS = ['provider', 'confidence', 'last_seen'];
-const PROXY_KEYS = ['provider', 'first_seen', 'last_seen', 'hits', 'hits_days_pct', 'providers_num'];
+const CLASS_KEYS = ['provider', 'provider_name', 'confidence', 'last_seen'];
+const PROXY_KEYS = [
+    'provider', 'provider_name', 'first_seen', 'last_seen', 'hits', 'hits_days_pct', 'providers_num',
+];
 export const MEMBERS = {
-    vpn: { required: ['provider', 'last_seen'], optional: ['confidence', 'method'] },
+    vpn: { required: ['provider', 'provider_name', 'last_seen'], optional: ['confidence', 'method'] },
     hosting: { required: CLASS_KEYS, optional: [] },
     relay: { required: CLASS_KEYS, optional: [] },
     tor: { required: CLASS_KEYS, optional: [] },
