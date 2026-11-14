@@ -2,6 +2,17 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.3.0 - 2026-11-14
+
+### Features
+
+- Re-pin the spec to 2026.11.14: is_bogon on every answer, and provider_name beside each provider ([`0af41f2`](https://github.com/vpndetection-io/sdk-web/commit/0af41f24f13b8a1d2b2774b16cc6d03e7e1c76eb))
+
+### Fixes
+
+- Re-pin the spec to 2026.11.12: plainer words on the 401 and the batch rate limit ([`7313e17`](https://github.com/vpndetection-io/sdk-web/commit/7313e1712fb564acbe7df88aa12773af6cdda1b2))
+- Say that a batch request of one address is answered as its lookup ([`43f516f`](https://github.com/vpndetection-io/sdk-web/commit/43f516f572d2e5a44c7aa052a323f07d04f4fae1))
+
 ## 1.2.2 - 2026-11-11
 
 ### Fixes
