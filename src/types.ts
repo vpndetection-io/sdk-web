@@ -20,7 +20,10 @@ export interface Result {
     ip: string;
     /** Whether the address is VPN infrastructure. Every plan includes this. */
     isVpn: boolean;
-    /** Set when this answer was computed locally rather than served. */
+    /**
+     * Whether the address is reserved space (private, loopback, documentation and the like), which
+     * this package answers locally without a request. A served answer carries the API's own `is_bogon`.
+     */
     isBogon: boolean;
 
     isHosting?: boolean;
@@ -68,7 +71,7 @@ export function toResult(body: LookupResponse): Result {
     const r: Result = {
         ip: body.ip,
         isVpn: body.is_vpn,
-        isBogon: false,
+        isBogon: body.is_bogon === true,
         raw: body,
     };
     copyFlag(body, r, 'is_hosting', 'isHosting');

@@ -24,21 +24,21 @@ export const ENTITLEMENT_USAGE_MEMBERS = ['requests', 'quota', 'window_start', '
 type Kind = 'string' | 'integer' | 'boolean' | 'object' | 'array' | 'date' | 'date-time';
 
 export const LOOKUP_TYPES: Record<string, Kind> = {
-    ip: 'string', is_vpn: 'boolean', is_hosting: 'boolean', is_relay: 'boolean', is_tor: 'boolean',
+    ip: 'string', is_bogon: 'boolean', is_vpn: 'boolean', is_hosting: 'boolean', is_relay: 'boolean', is_tor: 'boolean',
     is_cdn: 'boolean', is_resproxy: 'boolean', is_dcproxy: 'boolean', is_mobproxy: 'boolean',
     is_pubproxy: 'boolean', vpn: 'object', hosting: 'object', relay: 'object', tor: 'object', cdn: 'object',
     resproxy: 'object', dcproxy: 'object', mobproxy: 'object', pubproxy: 'object', location: 'object',
     asn: 'object', trial_expired: 'boolean',
 };
 export const VPN_DETAIL_TYPES: Record<string, Kind> = {
-    provider: 'string', last_seen: 'date', confidence: 'string', method: 'string',
+    provider: 'string', provider_name: 'string', last_seen: 'date', confidence: 'string', method: 'string',
 };
 export const CLASS_DETAIL_TYPES: Record<string, Kind> = {
-    provider: 'string', confidence: 'string', last_seen: 'date',
+    provider: 'string', provider_name: 'string', confidence: 'string', last_seen: 'date',
 };
 export const PROXY_DETAIL_TYPES: Record<string, Kind> = {
-    provider: 'string', first_seen: 'date', last_seen: 'date', hits: 'integer', hits_days_pct: 'integer',
-    providers_num: 'integer',
+    provider: 'string', provider_name: 'string', first_seen: 'date', last_seen: 'date', hits: 'integer',
+    hits_days_pct: 'integer', providers_num: 'integer',
 };
 export const PUBPROXY_DETAIL_TYPES: Record<string, Kind> = {
     entry: 'boolean', exit: 'boolean', protocols: 'array', num_ports: 'integer', num_proxies: 'integer',

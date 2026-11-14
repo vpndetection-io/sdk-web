@@ -145,6 +145,19 @@ test('a readable answer still comes back', async () => {
     assert.equal(c.calls.length, 1);
 });
 
+test('a served is_bogon reaches the result', async () => {
+    for (const served of [true, false]) {
+        const c = rawClient(body(`{"ip":"${IP}","is_bogon":${served},"is_vpn":false}`));
+        assert.equal((await c.client.lookup(IP)).isBogon, served);
+        const batch = rawClient(body(`{"results":{"${IP}":{"ip":"${IP}","is_bogon":${served},"is_vpn":false}},"errors":{}}`));
+        assert.equal((await batch.client.lookupBatch([IP])).get(IP).isBogon, served);
+    }
+    const detailed = rawClient(body(JSON.stringify({
+        ip: IP, is_vpn: true, vpn: { provider: 'nordvpn', provider_name: 'NordVPN', last_seen: '2026-11-14' },
+    })));
+    assert.equal((await detailed.client.lookup(IP)).vpn.provider_name, 'NordVPN');
+});
+
 test('a member of the wrong type is a retried server_error carrying its status', async () => {
     const lookup = { ip: IP, is_vpn: true };
     const location = {
@@ -165,6 +178,8 @@ test('a member of the wrong type is a retried server_error carrying its status',
         'is_hosting as "yes"': [look, { ...lookup, is_hosting: 'yes' }],
         'a vpn detail of "x"': [look, { ...lookup, vpn: 'x' }],
         'a vpn provider of 1': [look, { ...lookup, vpn: { provider: 1 } }],
+        'a vpn provider_name of 1': [look, { ...lookup, vpn: { provider: 'p', provider_name: 1 } }],
+        'is_bogon as "no"': [look, { ...lookup, is_bogon: 'no' }],
         'a last_seen of 5': [look, { ...lookup, hosting: { last_seen: 5 } }],
         'dcproxy hits of "3"': [look, { ...lookup, dcproxy: { hits: '3' } }],
         'resproxy hits of 1.5': [look, { ...lookup, resproxy: { hits: 1.5 } }],
