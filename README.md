@@ -7,9 +7,9 @@ The official browser client library for the [VPNDetection](https://vpndetection.
 
 It tells you whether an IP address is a VPN, residential proxy, Tor node, relay or hosting server.
 
-**An API key in a web page is public.** Anyone who opens the page can read it from the page's source or its network requests, and spend your allowance with it. In a page, use no key, or call the API from your own server and hand the page its answer. A key belongs only where the person it belongs to is the only one who can read it: their own browser extension, or an internal tool.
-
 ## Getting Started
+
+**An API key in a web page is public.** Anyone who opens the page can read it from the page's source or its network requests and use it as you would: spend your plan's lookups and, if the key may download databases, download every database your organization is licensed for. In a page, use no key, or call the API from your own server and hand the page its answer. A key belongs only where the person it belongs to is the only one who can read it, such as their own browser extension or an internal tool, and there a key that may only look up.
 
 ```bash
 npm install vpndetection-web
