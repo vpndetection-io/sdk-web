@@ -88,8 +88,11 @@ export function checkRetries(retries: number | null | undefined): number | undef
 }
 
 /** How many batch requests may be in flight, refused where it is set: p-limit throws a bare TypeError. */
-export function checkConcurrency(concurrency: number | undefined): number | undefined {
-    if (concurrency !== undefined && !(typeof concurrency === 'number' && concurrency >= 1
+export function checkConcurrency(concurrency: number | null | undefined): number | undefined {
+    if (concurrency === undefined || concurrency === null) {
+        return undefined;
+    }
+    if (!(typeof concurrency === 'number' && concurrency >= 1
         && (Number.isInteger(concurrency) || concurrency === Infinity))) {
         throw new VPNDetectionError(
             'bad_request', `concurrency must be a whole number of at least 1, got ${String(concurrency)}`,

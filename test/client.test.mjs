@@ -105,6 +105,15 @@ test('a concurrency below 1 or not whole is refused before any request', async (
     assert.doesNotThrow(() => new VPNDetection({ concurrency: Infinity }));
 });
 
+test('a null concurrency reads as unset, on the client and per call', async () => {
+    const t = concurrencyTrackingFetch();
+    const client = new VPNDetection({ fetch: t.fetch, cache: false, concurrency: null });
+    await client.lookupBatch(addrs, { concurrency: null });
+    // Seven chunks, all in flight under the default of 8.
+    assert.equal(t.state.calls, 7);
+    assert.equal(t.state.peak, 7);
+});
+
 test('retries are configurable per call', async () => {
     let calls = 0;
     const fetchFn = async () => {
