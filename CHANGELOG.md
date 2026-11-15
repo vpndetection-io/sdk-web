@@ -2,6 +2,13 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.3.1 - 2026-11-15
+
+### Fixes
+
+- Read a null concurrency as unset, as the Node.js SDK does ([`4f12306`](https://github.com/vpndetection-io/sdk-web/commit/4f12306e24fc17d48c3e30eb5f3268c4df939bba))
+- README: warn that a key in a page is public at the head of Getting Started ([`0e53224`](https://github.com/vpndetection-io/sdk-web/commit/0e532245cc34aa812df3a42e10173040ab5ce42f))
+
 ## 1.3.0 - 2026-11-14
 
 ### Features
