@@ -303,3 +303,32 @@ test('caching can be turned off', async () => {
     await client.lookup('1.1.1.1');
     assert.equal(stub.calls.length, 2);
 });
+
+// The browser SDK has no database calls, so it reads the entitlement's cases
+// and names the rest as not its own.
+test('a closed vocabulary hands back a value it was not built with', async (t) => {
+    const cases = data.vocabulary.cases;
+    assert.ok(cases.length >= 6);
+    let read = 0;
+    for (const c of cases) {
+        if (c.call !== 'myEntitlement') {
+            t.diagnostic(`${c.name}: ${c.call} is not a browser call`);
+            continue;
+        }
+        const client = new VPNDetection({
+            apiKey: 'k',
+            retries: 0,
+            fetch: async (input) => {
+                const url = typeof input === 'string' ? input : input.url;
+                assert.equal(new URL(url).pathname, '/api/v1/entitlement', c.name);
+                return new Response(JSON.stringify(c.answer), { headers: { 'content-type': 'application/json' } });
+            },
+        });
+        const answer = await client.myEntitlement();
+        for (const [member, value] of Object.entries(c.expect)) {
+            assert.deepEqual(member.split('.').reduce((v, step) => v[step], answer), value, `${c.name}: ${member}`);
+        }
+        read += 1;
+    }
+    assert.ok(read >= 2);
+});

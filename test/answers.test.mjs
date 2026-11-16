@@ -128,7 +128,7 @@ test('a readable answer still comes back', async () => {
     let c = rawClient(body(`{"ip":"${IP}","is_vpn":true}`));
     assert.equal((await c.client.lookup(IP)).isVpn, true);
     const entitlement = {
-        org_id: 'o', apikey: { id: 'k', expires: null, allowed_cidrs: [] }, plan: { key: 'max', tier: 'max' },
+        org_id: 'o', apikey: { id: 'k', expires: null, allowed_cidrs: [] }, plan: { key: 'max', name: 'Max', tier: 'max' },
         usage: {
             requests: 1, quota: 10, hard_limit: null,
             window_start: '2026-10-01T00:00:00Z', window_end: '2026-11-01T00:00:00Z',
@@ -166,7 +166,7 @@ test('a member of the wrong type is a retried server_error carrying its status',
         flag_emoji: 'x', flag_unicode: 'x',
     };
     const entitlement = {
-        org_id: 'o', apikey: { id: 'a', expires: null, allowed_cidrs: [] }, plan: { key: 'max', tier: 'max' },
+        org_id: 'o', apikey: { id: 'a', expires: null, allowed_cidrs: [] }, plan: { key: 'max', name: 'Max', tier: 'max' },
         usage: {
             requests: 1, quota: 2, hard_limit: null,
             window_start: '2026-10-01T00:00:00Z', window_end: '2026-11-01T00:00:00Z',
@@ -195,7 +195,9 @@ test('a member of the wrong type is a retried server_error carrying its status',
         'myIp with is_tor as 0': [(c) => c.myIp(), { ...lookup, is_tor: 0 }],
         'requests of "5"': [ent, { ...entitlement, usage: { ...entitlement.usage, requests: '5' } }],
         'a hard_limit of "5"': [ent, { ...entitlement, usage: { ...entitlement.usage, hard_limit: '5' } }],
-        'a tier of 1': [ent, { ...entitlement, plan: { key: 'max', tier: 1 } }],
+        'a tier of 1': [ent, { ...entitlement, plan: { key: 'max', name: 'Max', tier: 1 } }],
+        'a name of 1': [ent, { ...entitlement, plan: { key: 'max', name: 1, tier: 'max' } }],
+        'no name': [ent, { ...entitlement, plan: { key: 'max', tier: 'max' } }],
         'allowed_cidrs of [1]': [ent, {
             ...entitlement, apikey: { ...entitlement.apikey, allowed_cidrs: [1] },
         }],
@@ -230,7 +232,7 @@ test('a date or date-time that is not RFC 3339 is a retried server_error', async
         '20261005', '2026-W41-1', ' 2026-10-05', '+12026-10-05', 'x', 'tomorrow', 'monday', ''];
     const lookup = { ip: IP, is_vpn: true };
     const entitlement = {
-        org_id: 'o', apikey: { id: 'a', expires: null, allowed_cidrs: [] }, plan: { key: 'max', tier: 'max' },
+        org_id: 'o', apikey: { id: 'a', expires: null, allowed_cidrs: [] }, plan: { key: 'max', name: 'Max', tier: 'max' },
         usage: {
             requests: 1, quota: 2, hard_limit: null,
             window_start: '2026-10-01T00:00:00Z', window_end: '2026-11-01T00:00:00Z',

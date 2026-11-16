@@ -14,7 +14,7 @@ export const BATCH_MEMBERS = ['results', 'errors'] as const;
 export const BATCH_ERROR_MEMBERS = ['status', 'error'] as const;
 export const ENTITLEMENT_MEMBERS = ['org_id', 'apikey', 'plan', 'usage'] as const;
 export const ENTITLEMENT_APIKEY_MEMBERS = ['id', 'allowed_cidrs'] as const;
-export const ENTITLEMENT_PLAN_MEMBERS = ['key', 'tier'] as const;
+export const ENTITLEMENT_PLAN_MEMBERS = ['key', 'name', 'tier'] as const;
 export const ENTITLEMENT_USAGE_MEMBERS = ['requests', 'quota', 'window_start', 'window_end'] as const;
 
 // Every member's type, nullable and optional ones included: one the spec requires
@@ -57,7 +57,7 @@ export const ENTITLEMENT_TYPES: Record<string, Kind> = {
 export const ENTITLEMENT_APIKEY_TYPES: Record<string, Kind> = {
     id: 'string', expires: 'date-time', allowed_cidrs: 'array',
 };
-export const ENTITLEMENT_PLAN_TYPES: Record<string, Kind> = { key: 'string', tier: 'string' };
+export const ENTITLEMENT_PLAN_TYPES: Record<string, Kind> = { key: 'string', name: 'string', tier: 'string' };
 export const ENTITLEMENT_USAGE_TYPES: Record<string, Kind> = {
     requests: 'integer', quota: 'integer', hard_limit: 'integer', window_start: 'date-time',
     window_end: 'date-time',

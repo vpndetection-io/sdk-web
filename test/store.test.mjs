@@ -55,7 +55,7 @@ function api(refuse = new Set(), delayMs = 0) {
         if (path === '/api/v1/entitlement') {
             return Response.json({
                 org_id: 'o', apikey: { id: 'a', expires: null, allowed_cidrs: [] },
-                plan: { key: 'max', tier: 'max' },
+                plan: { key: 'max', name: 'Max', tier: 'max' },
                 usage: {
                     requests: 1, quota: 2, hard_limit: null,
                     window_start: '2026-10-01T00:00:00Z', window_end: '2026-11-01T00:00:00Z',
