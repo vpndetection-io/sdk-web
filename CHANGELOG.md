@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.4.0 - 2026-11-16
+
+### Features
+
+- Read the plan's name, and pin a tier handed back as served ([`6ad7fa1`](https://github.com/vpndetection-io/sdk-web/commit/6ad7fa1af68c790dde3d1ef34269657cf812a052))
+
 ## 1.3.1 - 2026-11-15
 
 ### Fixes
