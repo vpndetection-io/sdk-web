@@ -249,12 +249,13 @@ The library is ES2022 and needs only what a browser has, `fetch` and, for PKCE, 
 
 ### Absent is not false
 
-Unlimited leaves out `isHosting`, `isCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its daily trial is spent. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
+Unlimited leaves out `isHosting`, `isCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its daily trial is spent, and a paid key's carries `capReached`, true once its organization's overage cap is reached and the answer has Unlimited's. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
 
 ```js
 result.isHosting ?? false        // when you only want the flag
 result.isHosting === undefined   // on Unlimited: not in your plan
 result.trialExpired === true     // a free-plan key's daily trial is spent
+result.capReached === true       // a paid key past its overage cap
 ```
 
 ## Other Libraries
