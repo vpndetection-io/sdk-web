@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.5.0 - 2026-11-18
+
+### Features
+
+- Read cap_reached past a paid plan's overage cap, and re-pin the spec ([`00dc953`](https://github.com/vpndetection-io/sdk-web/commit/00dc95344c737bfa2d324ba9f9b258e4948ad707))
+
 ## 1.4.0 - 2026-11-16
 
 ### Features
