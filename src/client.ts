@@ -10,7 +10,7 @@ import { bogonResult, isBogon, unmapped } from './bogon.js';
 import { errorFromEntry, VPNDetectionError } from './errors.js';
 import { OauthApi } from './oauth.js';
 import { isBatch, isBatchError, isEntitlement, isLookup } from './shapes.js';
-import { isCacheStore, storeScope, StoreTier, type CacheStore } from './store.js';
+import { isCacheStore, lifeMs, storeScope, StoreTier, type CacheStore } from './store.js';
 import {
     asError, checkConcurrency, checkRetries, checkTimeout, deadline, readable, withRetry,
 } from './transport.js';
@@ -29,7 +29,10 @@ const BATCH_MAX = 1000;
 export interface CacheOptions {
     /** Maximum number of addresses held in memory. Default 10000. */
     max?: number;
-    /** How long an answer stays fresh, in milliseconds. Default 1 hour. */
+    /**
+     * How long an answer stays fresh, in milliseconds. Default 1 hour. An answer
+     * marked `trialExpired` or `capReached` stays a minute at most.
+     */
     ttlMs?: number;
     /**
      * Where answers outlive this client: read after the in-memory cache misses and
@@ -126,7 +129,11 @@ export class VPNDetection {
             // Concurrent misses for one address share one request: every
             // `fetch()` while it is in flight gets the same promise, and a
             // failure rejects them all and is cached for none.
-            fetchMethod: (_ip, _stale, { context }) => context(),
+            fetchMethod: async (_ip, _stale, { context, options }) => {
+                const result = await context();
+                options.ttl = lifeMs(result, ttlMs);
+                return result;
+            },
             // An eviction must not fail the callers awaiting a request.
             ignoreFetchAbort: true,
         });

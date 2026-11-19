@@ -47,7 +47,7 @@ export class StoreTier {
 
     async set(ip: string, result: Result): Promise<void> {
         try {
-            await this.store.set(this.keyFor(ip), result, this.ttlMs);
+            await this.store.set(this.keyFor(ip), result, lifeMs(result, this.ttlMs));
         } catch {
             // Costs a request on the next miss, nothing more.
         }
@@ -57,6 +57,20 @@ export class StoreTier {
         return `${this.scope}:${ip}`;
     }
 }
+
+/**
+ * How long an answer stays cached: the TTL, or at most a minute for one marked
+ * `trialExpired` or `capReached`, which a new UTC day or a raised cap ends. Still
+ * cached, so a busy page past its trial does not send every repeat to the API.
+ */
+export function lifeMs(result: Result, ttlMs: number): number {
+    if (result.trialExpired === true || result.capReached === true) {
+        return Math.min(ttlMs, REDUCED_TTL_MS);
+    }
+    return ttlMs;
+}
+
+const REDUCED_TTL_MS = 60_000;
 
 const FNV_OFFSET = 0xcbf29ce484222325n;
 const FNV_PRIME = 0x100000001b3n;

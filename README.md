@@ -129,6 +129,8 @@ const client = new VPNDetection({ cache: { max: 50_000, ttlMs: 6 * 60 * 60 * 100
 const clientNoCache = new VPNDetection({ cache: false });
 ```
 
+An answer with `trialExpired` or `capReached` true is cached for a minute at most, in memory and in a `store`, so a new day's trial or a raised cap reaches you within a minute.
+
 ### Keeping answers across a reload
 
 The in-memory cache lasts as long as the client, so a page reload starts with an empty one, and so does an extension's service worker, which the browser stops once it sits idle. Give the cache a `store` and answers outlive the client: it is read when the in-memory cache misses, before the network, and written after each answer the API serves. In a page, `sessionStorage` keeps them for the tab:
