@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.5.1 - 2026-11-19
+
+### Fixes
+
+- Re-pin the spec to 2026.11.18: a key over plain HTTP is refused ([`5a9efa1`](https://github.com/vpndetection-io/sdk-web/commit/5a9efa12d7bfa6de5567907f1215380c66c3281d))
+
 ## 1.5.0 - 2026-11-18
 
 ### Features
