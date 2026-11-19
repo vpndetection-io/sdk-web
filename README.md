@@ -241,7 +241,7 @@ const token = await client.oauth.exchangeAuthorizationCode('your-client-id', cod
 
 Check that `state` came back as you sent it before you exchange `code`, which works once. The client ID can also be the https URL of a client metadata document your app serves, and such an app is never handed a key, so `token.apikey` stays absent.
 
-`createPkce` and `pkceChallenge` return promises, as Web Crypto does, and need a secure context: a page served over https or from localhost, or an extension. `exchangeRefreshToken` trades the refresh token for a new pair, and `revoke` with it signs the person out. Client IDs are issued on request from support@vpndetection.io.
+`createPkce` and `pkceChallenge` return promises, as Web Crypto does, and need a secure context: a page served over https or from localhost, or an extension. `exchangeRefreshToken` trades the refresh token for a new pair, and `revoke` with it signs the person out. Any app can sign people in this way without asking us first: its client ID is the https URL of a client metadata document it serves.
 
 ### Browser support
 
