@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.5.2 - 2026-11-19
+
+### Fixes
+
+- Cache a spent trial's or a reached cap's answer for a minute at most ([`439b54a`](https://github.com/vpndetection-io/sdk-web/commit/439b54a8fbe2846b4d262d15fa82fd46a0176752))
+
 ## 1.5.1 - 2026-11-19
 
 ### Fixes
