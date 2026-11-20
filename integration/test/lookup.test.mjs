@@ -14,8 +14,8 @@ import { test } from 'node:test';
 import { VPNDetection, VPNDetectionError, isBogon } from 'vpndetection-web';
 
 import {
-    INSTALLED_VERSION, MEMBERS, PROBE, RESULT_PROP, STAGING, answerFor, assertServedByTier,
-    assertShape, clientFor, flagProp,
+    INSTALLED_VERSION, MEMBERS, PROBE, READS_NETWORK_MEMBERS, RESULT_PROP, STAGING, answerFor,
+    assertServedByTier, assertShape, clientFor, detailProp, flagProp,
 } from '../lib/staging.mjs';
 import { RUNGS, UNAUTH_RUNG, observableRungs, skipFor } from '../lib/tiers.mjs';
 
@@ -59,8 +59,8 @@ for (const rung of RUNGS.filter((r) => r.secret !== null)) {
 
         assert.ok(facts.length > 0 && facts.every((fact) => fact.carriedKey), 'the key never reached the wire');
         if (rung.tier === 'trial') {
-            // The rung's key is on the free plan, Unlimited, whose daily trial it is
-            // named for: its plan and its field tier are both `free`.
+            // The rung's key is on the free plan, Unlimited, whose trial of every field
+            // it is named for: its plan and its field tier are both `free`.
             assert.equal(entitlement.plan.key, 'free');
             assert.equal(entitlement.plan.tier, 'free');
         } else {
@@ -103,9 +103,9 @@ test("a free-plan key's answer is a paid one or Unlimited's, and says which", { 
     const raw = (await answerFor(TRIAL_RUNG)).result.raw;
 
     assert.equal(typeof raw.trial_expired, 'boolean', 'a free-plan key answers trial_expired');
-    // The organization's first 100 lookups of the UTC day are answered in full,
-    // and the rest as Unlimited's: which half a run sees depends on the day.
-    assert.equal('is_hosting' in raw, !raw.trial_expired, 'is_hosting is served exactly while the day lasts');
+    // Answered in full while the organization's trial lasts, and as Unlimited's
+    // after: which half a run sees depends on that organization.
+    assert.equal('is_hosting' in raw, !raw.trial_expired, 'is_hosting is served exactly while the trial lasts');
 });
 
 test("a free-plan key's batch of two is refused as a bad request, once", { skip: skipFor(TRIAL_RUNG) }, async () => {
@@ -184,7 +184,13 @@ test('a bogon is answered without touching the network', async () => {
     assert.equal(isBogon('10.0.0.1'), true, 'the standalone export must agree');
     for (const name of Object.keys(MEMBERS)) {
         assert.equal(r[flagProp(name)], false, `${flagProp(name)} must be present and false on a bogon`);
-        assert.deepEqual(r[name], {}, `${name} must be present and empty on a bogon`);
+        assert.deepEqual(r[detailProp(name)], {}, `${name} must be present and empty on a bogon`);
+    }
+    if (READS_NETWORK_MEMBERS) {
+        assert.equal(r.isAnycast, false, 'isAnycast must be present and false on a bogon');
+        assert.equal(r.isWeb, false, 'isWeb must be present and false on a bogon');
+        assert.deepEqual(r.web, [], 'web must be present and an empty list on a bogon');
+        assert.equal(r.hostname, '', 'hostname must be present and empty on a bogon');
     }
 });
 

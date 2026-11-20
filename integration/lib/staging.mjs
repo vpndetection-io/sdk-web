@@ -37,17 +37,83 @@ export const MEMBERS = {
     mobproxy: { required: PROXY_KEYS, optional: [] },
 };
 
+// The network and service members, read by the client from 1.6.0: an older
+// install drops them, so they join the lists only once it reads them.
+export const READS_NETWORK_MEMBERS = needsVersion('1.6.0', 'the network and service members') === false;
+const WEB_KEYS = [
+    'port', 'tls_ok', 'session_ok', 'status_code', 'server', 'location', 'title', 'cert_subject_cn',
+    'cert_subject_o', 'cert_issuer_dn', 'cert_browser_trusted', 'tls_version', 'first_seen', 'last_seen',
+];
+if (READS_NETWORK_MEMBERS) {
+    Object.assign(MEMBERS, {
+        carrier: { required: ['name', 'mcc', 'mnc', 'country', 'confidence'], optional: [] },
+        satellite: {
+            required: ['provider', 'provider_name', 'orbit', 'segment', 'country', 'asn', 'confidence'], optional: [],
+        },
+        ssh: { required: ['port', 'banner', 'host_key_fp', 'session_ok', 'first_seen', 'last_seen'], optional: [] },
+        smtp: { required: ['port', 'banner', 'session_ok', 'first_seen', 'last_seen'], optional: [] },
+        dns_resolver: {
+            required: ['port', 'recursion_available', 'rcode', 'answer_correct', 'first_seen', 'last_seen'],
+            optional: [],
+        },
+        bittorrent: {
+            required: [
+                'verified', 'id_matches_ip', 'first_seen', 'last_seen', 'last_reachable', 'days_seen', 'num_ports',
+                'peak_num_ports', 'indexer', 'clients',
+            ],
+            optional: [],
+        },
+    });
+}
+
+const camel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
 // Wire name to the property the client maps it onto, which is what lets a test
 // say "this field is absent" about both halves at once.
 export const RESULT_PROP = { ip: 'ip' };
 for (const name of Object.keys(MEMBERS)) {
     RESULT_PROP[`is_${name}`] = flagProp(name);
-    RESULT_PROP[name] = name;
+    RESULT_PROP[name] = detailProp(name);
+}
+if (READS_NETWORK_MEMBERS) {
+    for (const name of ['is_anycast', 'is_web', 'web', 'company', 'hostname', 'abuse']) {
+        RESULT_PROP[name] = camel(name);
+    }
 }
 
 export function flagProp(name) {
-    return `is${name[0].toUpperCase()}${name.slice(1)}`;
+    const c = camel(name);
+    return `is${c[0].toUpperCase()}${c.slice(1)}`;
 }
+
+export function detailProp(name) {
+    return camel(name);
+}
+
+
+// The suite runs against whatever the REGISTRY offers, which lags the working
+// tree between releases. A method added since the last publish is not a
+// failure, so its tests name the version they need and skip until it lands.
+export function needsVersion(min, what) {
+    const have = triple(INSTALLED_VERSION);
+    const want = triple(min);
+    for (let i = 0; i < 3; i++) {
+        if (have[i] === want[i]) {
+            continue;
+        }
+        if (have[i] > want[i]) {
+            return false;
+        }
+        return `${what} landed in ${min}, and the registry currently offers ${INSTALLED_VERSION}`;
+    }
+    return false;
+}
+
+function triple(version) {
+    const parts = version.split(/[-+]/)[0].split('.');
+    return [0, 1, 2].map((i) => Number(parts[i]) || 0);
+}
+
 
 export function clientFor(rung, onRequest = () => {}) {
     const key = keyFor(rung);
@@ -134,7 +200,7 @@ export function assertShape(r) {
         if (flag in r) {
             assert.equal(typeof r[flag], 'boolean', `${flag} is present, so it must be a real boolean`);
         }
-        if (!(name in r)) {
+        if (!(detailProp(name) in r)) {
             continue;
         }
         // A detail object without its flag would leave a caller reading the
@@ -142,10 +208,29 @@ export function assertShape(r) {
         assert.ok(flag in r, `${name} is served without ${flag}`);
         assertDetail(r, name, MEMBERS[name]);
     }
+    if (READS_NETWORK_MEMBERS) {
+        assertWeb(r);
+    }
+}
+
+// A row per port that answered, and an empty list when no web server did.
+function assertWeb(r) {
+    if ('isWeb' in r) {
+        assert.equal(typeof r.isWeb, 'boolean', 'isWeb is present, so it must be a real boolean');
+    }
+    if (!('web' in r)) {
+        return;
+    }
+    assert.ok('isWeb' in r, 'web is served without isWeb');
+    assert.ok(Array.isArray(r.web), 'web must be a list when present');
+    assert.equal(r.web.length > 0, r.isWeb, 'web has a row exactly when isWeb is true');
+    for (const row of r.web) {
+        assert.deepEqual(Object.keys(row).sort(), [...WEB_KEYS].sort(), 'a web row carries exactly its documented keys');
+    }
 }
 
 function assertDetail(r, name, spec) {
-    const detail = r[name];
+    const detail = r[detailProp(name)];
     assert.equal(typeof detail, 'object', `${name} must be an object when present`);
     const keys = Object.keys(detail);
     if (keys.length === 0) {
