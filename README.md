@@ -80,7 +80,7 @@ console.log(ent.usage.requests);    // 580
 console.log(ent.usage.window_end);  // when the allowance resets
 ```
 
-Usage counts against the anniversary of your subscription on a paid plan, not the calendar month and not the billing period, and against the UTC day on the free plan; it is the same number a lookup is gated on. `hard_limit` is null on an uncapped plan, which is not the same as zero. It needs a key, so it belongs where a key does.
+Usage counts against the anniversary of your subscription on a paid plan, not the calendar month and not the billing period, and against the trial on the free plan; it is the same number a lookup is gated on. `hard_limit` is null on an uncapped plan, which is not the same as zero. It needs a key, so it belongs where a key does.
 
 Show `plan.name` and compare against `plan.key`: a plan's name can change, and its key never does. A `tier` the API adds later comes back as the string it served, so check for the values you know rather than assuming the list is complete.
 
