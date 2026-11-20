@@ -192,6 +192,20 @@ test('a member of the wrong type is a retried server_error carrying its status',
         'an asn of "5"': [look, {
             ...lookup, asn: { asn: '5', name: 'n', domain: 'd', type: 't', prefix: 'p' },
         }],
+        'is_anycast as "no"': [look, { ...lookup, is_anycast: 'no' }],
+        'a hostname of 5': [look, { ...lookup, hostname: 5 }],
+        'a latitude of "48.2"': [look, { ...lookup, location: { ...location, latitude: '48.2' } }],
+        'an accuracy_radius of 1.5': [look, { ...lookup, location: { ...location, accuracy_radius: 1.5 } }],
+        'an asn country of 1': [look, {
+            ...lookup, asn: { asn: 5, name: 'n', domain: 'd', type: 't', prefix: 'p', country: 1 },
+        }],
+        'a satellite asn of "1"': [look, { ...lookup, satellite: { asn: '1' } }],
+        'ssh port of "22"': [look, { ...lookup, ssh: { port: '22' } }],
+        'bittorrent clients of [1]': [look, { ...lookup, bittorrent: { clients: [1] } }],
+        'a web detail of {}': [look, { ...lookup, web: {} }],
+        'a web row without its members': [look, { ...lookup, web: [{ port: 80 }] }],
+        'a company without its domain': [look, { ...lookup, company: { name: 'n' } }],
+        'abuse validated as "yes"': [look, { ...lookup, abuse: { email: 'e', validated: 'yes' } }],
         'myIp with is_tor as 0': [(c) => c.myIp(), { ...lookup, is_tor: 0 }],
         'requests of "5"': [ent, { ...entitlement, usage: { ...entitlement.usage, requests: '5' } }],
         'a hard_limit of "5"': [ent, { ...entitlement, usage: { ...entitlement.usage, hard_limit: '5' } }],
@@ -307,6 +321,10 @@ test('each date kind is the format the spec names', async () => {
         EntitlementApikey: shapes.ENTITLEMENT_APIKEY_TYPES,
         EntitlementUsage: shapes.ENTITLEMENT_USAGE_TYPES, LookupResponse: shapes.LOOKUP_TYPES,
         Location: shapes.LOCATION_TYPES, Asn: shapes.ASN_TYPES, Entitlement: shapes.ENTITLEMENT_TYPES,
+        CarrierDetail: shapes.CARRIER_DETAIL_TYPES, SatelliteDetail: shapes.SATELLITE_DETAIL_TYPES,
+        SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
+        DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
+        Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
     };
     const kinds = new Map();
     for (const [name, table] of Object.entries(tables)) {
@@ -339,6 +357,9 @@ test('each checked member list is every required member of its generated type', 
     assert.deepEqual([...shapes.ENTITLEMENT_USAGE_MEMBERS].sort(), required('EntitlementUsage'));
     assert.deepEqual([...shapes.LOCATION_MEMBERS].sort(), required('Location'));
     assert.deepEqual([...shapes.ASN_MEMBERS].sort(), required('Asn'));
+    assert.deepEqual([...shapes.COMPANY_MEMBERS].sort(), required('Company'));
+    assert.deepEqual([...shapes.ABUSE_CONTACT_MEMBERS].sort(), required('AbuseContact'));
+    assert.deepEqual([...shapes.WEB_DETAIL_MEMBERS].sort(), required('WebDetail'));
 });
 
 // Each type table names every member of its generated type, optional and nullable
@@ -354,6 +375,10 @@ test('each type table covers every member of its generated type', async () => {
         BatchLookupError: shapes.BATCH_ERROR_TYPES,
         Entitlement: shapes.ENTITLEMENT_TYPES, EntitlementApikey: shapes.ENTITLEMENT_APIKEY_TYPES,
         EntitlementPlan: shapes.ENTITLEMENT_PLAN_TYPES, EntitlementUsage: shapes.ENTITLEMENT_USAGE_TYPES,
+        CarrierDetail: shapes.CARRIER_DETAIL_TYPES, SatelliteDetail: shapes.SATELLITE_DETAIL_TYPES,
+        SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
+        DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
+        Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
     };
     for (const [name, table] of Object.entries(tables)) {
         assert.deepEqual(Object.keys(table).sort(), members(name), name);

@@ -10,6 +10,12 @@ export const LOCATION_MEMBERS = [
     'currency_symbol', 'flag_emoji', 'flag_unicode',
 ] as const;
 export const ASN_MEMBERS = ['asn', 'name', 'domain', 'type', 'prefix'] as const;
+export const COMPANY_MEMBERS = ['name', 'domain'] as const;
+export const ABUSE_CONTACT_MEMBERS = ['email'] as const;
+export const WEB_DETAIL_MEMBERS = [
+    'port', 'tls_ok', 'session_ok', 'status_code', 'server', 'location', 'title', 'cert_subject_cn',
+    'cert_subject_o', 'cert_issuer_dn', 'cert_browser_trusted', 'tls_version', 'first_seen', 'last_seen',
+] as const;
 export const BATCH_MEMBERS = ['results', 'errors'] as const;
 export const BATCH_ERROR_MEMBERS = ['status', 'error'] as const;
 export const ENTITLEMENT_MEMBERS = ['org_id', 'apikey', 'plan', 'usage'] as const;
@@ -21,14 +27,17 @@ export const ENTITLEMENT_USAGE_MEMBERS = ['requests', 'quota', 'window_start', '
 // and never sends as null may not be null, and any other is null, absent or of its
 // type. A `date` or `date-time` is RFC 3339's, on a day that exists. The tests hold
 // each table to its generated type, and the date kinds to the spec's `format`.
-type Kind = 'string' | 'integer' | 'boolean' | 'object' | 'array' | 'date' | 'date-time';
+type Kind = 'string' | 'integer' | 'number' | 'boolean' | 'object' | 'array' | 'date' | 'date-time';
 
 export const LOOKUP_TYPES: Record<string, Kind> = {
     ip: 'string', is_bogon: 'boolean', is_vpn: 'boolean', is_hosting: 'boolean', is_relay: 'boolean', is_tor: 'boolean',
     is_cdn: 'boolean', is_resproxy: 'boolean', is_dcproxy: 'boolean', is_mobproxy: 'boolean',
-    is_pubproxy: 'boolean', vpn: 'object', hosting: 'object', relay: 'object', tor: 'object', cdn: 'object',
-    resproxy: 'object', dcproxy: 'object', mobproxy: 'object', pubproxy: 'object', location: 'object',
-    asn: 'object', trial_expired: 'boolean', cap_reached: 'boolean',
+    is_pubproxy: 'boolean', is_anycast: 'boolean', is_carrier: 'boolean', is_satellite: 'boolean', is_ssh: 'boolean',
+    is_smtp: 'boolean', is_web: 'boolean', is_dns_resolver: 'boolean', is_bittorrent: 'boolean', vpn: 'object',
+    hosting: 'object', relay: 'object', tor: 'object', cdn: 'object', resproxy: 'object', dcproxy: 'object',
+    mobproxy: 'object', pubproxy: 'object', carrier: 'object', satellite: 'object', ssh: 'object', smtp: 'object',
+    web: 'array', dns_resolver: 'object', bittorrent: 'object', location: 'object', asn: 'object',
+    company: 'object', hostname: 'string', abuse: 'object', trial_expired: 'boolean', cap_reached: 'boolean',
 };
 export const VPN_DETAIL_TYPES: Record<string, Kind> = {
     provider: 'string', provider_name: 'string', last_seen: 'date', confidence: 'string', method: 'string',
@@ -44,11 +53,51 @@ export const PUBPROXY_DETAIL_TYPES: Record<string, Kind> = {
     entry: 'boolean', exit: 'boolean', protocols: 'array', num_ports: 'integer', num_proxies: 'integer',
     last_seen: 'date', last_usable: 'string',
 };
-export const LOCATION_TYPES: Record<string, Kind> = Object.fromEntries(
-    LOCATION_MEMBERS.map((m) => [m, 'string'] as const),
-);
+export const CARRIER_DETAIL_TYPES: Record<string, Kind> = {
+    name: 'string', mcc: 'string', mnc: 'string', country: 'string', confidence: 'string',
+};
+export const SATELLITE_DETAIL_TYPES: Record<string, Kind> = {
+    provider: 'string', provider_name: 'string', orbit: 'string', segment: 'string', country: 'string',
+    asn: 'integer', confidence: 'string',
+};
+export const SSH_DETAIL_TYPES: Record<string, Kind> = {
+    port: 'integer', banner: 'string', host_key_fp: 'string', session_ok: 'boolean', first_seen: 'string',
+    last_seen: 'string',
+};
+export const SMTP_DETAIL_TYPES: Record<string, Kind> = {
+    port: 'integer', banner: 'string', session_ok: 'boolean', first_seen: 'string', last_seen: 'string',
+};
+export const WEB_DETAIL_TYPES: Record<string, Kind> = {
+    port: 'integer', tls_ok: 'boolean', session_ok: 'boolean', status_code: 'integer', server: 'string',
+    location: 'string', title: 'string', cert_subject_cn: 'string', cert_subject_o: 'string',
+    cert_issuer_dn: 'string', cert_browser_trusted: 'boolean', tls_version: 'string', first_seen: 'string',
+    last_seen: 'string',
+};
+export const DNS_RESOLVER_DETAIL_TYPES: Record<string, Kind> = {
+    port: 'integer', recursion_available: 'boolean', rcode: 'integer', answer_correct: 'boolean',
+    first_seen: 'string', last_seen: 'string',
+};
+export const BITTORRENT_DETAIL_TYPES: Record<string, Kind> = {
+    verified: 'boolean', id_matches_ip: 'boolean', first_seen: 'string', last_seen: 'string',
+    last_reachable: 'string', days_seen: 'integer', num_ports: 'integer', peak_num_ports: 'integer',
+    indexer: 'boolean', clients: 'array',
+};
+export const LOCATION_TYPES: Record<string, Kind> = {
+    ...Object.fromEntries(LOCATION_MEMBERS.map((m) => [m, 'string'] as const)),
+    region: 'string', region_code: 'string', city: 'string', postal_code: 'string', latitude: 'number',
+    longitude: 'number', accuracy_radius: 'integer', geoname_id: 'string', dma_code: 'string',
+    last_changed: 'string',
+};
 export const ASN_TYPES: Record<string, Kind> = {
-    asn: 'integer', name: 'string', domain: 'string', type: 'string', prefix: 'string',
+    asn: 'integer', name: 'string', domain: 'string', type: 'string', prefix: 'string', country: 'string',
+    rpki_status: 'string',
+};
+export const COMPANY_TYPES: Record<string, Kind> = {
+    name: 'string', domain: 'string', type: 'string', country: 'string',
+};
+export const ABUSE_CONTACT_TYPES: Record<string, Kind> = {
+    email: 'string', name: 'string', phone: 'string', address: 'string', country: 'string', network: 'string',
+    validated: 'boolean', unvalidated_since: 'string',
 };
 export const BATCH_ERROR_TYPES: Record<string, Kind> = { status: 'integer', error: 'string' };
 export const ENTITLEMENT_TYPES: Record<string, Kind> = {
@@ -71,6 +120,7 @@ function isKind(value: unknown, kind: Kind): boolean {
     switch (kind) {
         case 'string': return typeof value === 'string';
         case 'integer': return Number.isInteger(value);
+        case 'number': return typeof value === 'number' && Number.isFinite(value);
         case 'boolean': return typeof value === 'boolean';
         case 'object': return isObject(value);
         case 'array': return Array.isArray(value);
@@ -129,19 +179,33 @@ function optional(value: unknown, valid: (value: unknown) => boolean): boolean {
     return value === undefined || value === null || valid(value);
 }
 
+function lists(value: unknown, member: string, valid: (entry: unknown) => boolean): boolean {
+    return optional((value as Record<string, unknown>)[member], (list) => every(list, valid));
+}
+
 const DETAILS: [string, Record<string, Kind>][] = [
     ['vpn', VPN_DETAIL_TYPES], ['hosting', CLASS_DETAIL_TYPES], ['relay', CLASS_DETAIL_TYPES],
     ['tor', CLASS_DETAIL_TYPES], ['cdn', CLASS_DETAIL_TYPES], ['resproxy', PROXY_DETAIL_TYPES],
     ['dcproxy', PROXY_DETAIL_TYPES], ['mobproxy', PROXY_DETAIL_TYPES], ['pubproxy', PUBPROXY_DETAIL_TYPES],
+    ['carrier', CARRIER_DETAIL_TYPES], ['satellite', SATELLITE_DETAIL_TYPES], ['ssh', SSH_DETAIL_TYPES],
+    ['smtp', SMTP_DETAIL_TYPES], ['dns_resolver', DNS_RESOLVER_DETAIL_TYPES],
+    ['bittorrent', BITTORRENT_DETAIL_TYPES],
+];
+
+const SHARED: [string, readonly string[], Record<string, Kind>][] = [
+    ['location', LOCATION_MEMBERS, LOCATION_TYPES],
+    ['asn', ASN_MEMBERS, ASN_TYPES],
+    ['company', COMPANY_MEMBERS, COMPANY_TYPES],
+    ['abuse', ABUSE_CONTACT_MEMBERS, ABUSE_CONTACT_TYPES],
 ];
 
 export function isLookup(data: unknown): boolean {
     return typed(data, LOOKUP_MEMBERS, LOOKUP_TYPES)
         && DETAILS.every(([member, types]) => optional(data[member], (detail) => typed(detail, [], types)))
-        && optional((data['pubproxy'] as Record<string, unknown> | undefined)?.['protocols'],
-            (protocols) => every(protocols, isString))
-        && optional(data['location'], (location) => typed(location, LOCATION_MEMBERS, LOCATION_TYPES))
-        && optional(data['asn'], (asn) => typed(asn, ASN_MEMBERS, ASN_TYPES));
+        && optional(data['pubproxy'], (pubproxy) => lists(pubproxy, 'protocols', isString))
+        && optional(data['bittorrent'], (bittorrent) => lists(bittorrent, 'clients', isString))
+        && optional(data['web'], (web) => every(web, (row) => typed(row, WEB_DETAIL_MEMBERS, WEB_DETAIL_TYPES)))
+        && SHARED.every(([member, required, types]) => optional(data[member], (o) => typed(o, required, types)));
 }
 
 /** Both maps present. An entry in either is judged on its own, as that address's answer. */
