@@ -45,8 +45,8 @@ export interface CacheOptions {
 export interface Options {
     /**
      * Your API key. Without one a lookup is on Unlimited, the free plan: `ip`,
-     * `is_vpn`, the Tor and relay members, `location` and `asn`, with no daily
-     * or monthly cap. A batch needs a key on a paid plan.
+     * `is_vpn`, the Tor and relay members, `is_anycast`, `hostname`, `location`
+     * and `asn`, with no daily or monthly cap. A batch needs a key on a paid plan.
      * A key in a web page is readable by anyone who opens the page.
      */
     apiKey?: string;

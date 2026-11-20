@@ -123,11 +123,25 @@ test('a bogon is answered locally in the full max shape', async () => {
     }
     assert.deepEqual(r.location, data.bogonResponse.location, 'location must carry every key, empty');
     assert.deepEqual(r.asn, data.bogonResponse.asn, 'asn must carry every key, empty');
+    assert.deepEqual(r.web, data.bogonResponse.web, 'web must be present and an empty list');
+    assert.equal(r.hostname, data.bogonResponse.hostname, 'hostname must be present and empty');
+    assert.deepEqual(r.company, data.bogonResponse.company, 'company must carry every key, empty');
+    assert.deepEqual(r.abuse, data.bogonResponse.abuse, 'abuse must carry every key, empty');
     assert.equal(stub.calls.length, 0, 'a bogon must not reach the network');
 });
 
+// Every member a case's `expect` can name. A key outside this list fails the
+// case rather than passing it unread, so a member the corpus adds is asserted
+// here before it can pass vacuously.
+const DETAIL_KEYS = [
+    'vpn', 'hosting', 'dcproxy', 'pubproxy', 'carrier', 'satellite', 'ssh', 'smtp', 'web', 'dns_resolver',
+    'bittorrent', 'location', 'asn', 'company', 'abuse', 'hostname',
+];
+const EXPECT_KEYS = ['ip', 'isBogon', 'present', 'absent', 'emptyPresent', ...DETAIL_KEYS];
+
 test('lookup preserves absent-versus-false across every plan shape', async () => {
     for (const c of data.lookup) {
+        assert.deepEqual(Object.keys(c.expect).filter((k) => !EXPECT_KEYS.includes(k)), [], `${c.name}: unread expect keys`);
         const stub = stubFetch({ [c.body.ip]: { status: c.status, body: c.body } });
         const client = new VPNDetection({ fetch: stub.fetch });
         const r = await client.lookup(c.body.ip);
@@ -144,9 +158,9 @@ test('lookup preserves absent-versus-false across every plan shape', async () =>
         for (const k of c.expect.emptyPresent ?? []) {
             assert.deepEqual(r[camel(k)], {}, `${c.name}: ${k} must be present and empty`);
         }
-        for (const obj of ['vpn', 'hosting', 'dcproxy', 'pubproxy', 'location', 'asn']) {
+        for (const obj of DETAIL_KEYS) {
             if (c.expect[obj] !== undefined) {
-                assert.deepEqual(r[obj], c.expect[obj], `${c.name}: ${obj}`);
+                assert.deepEqual(r[camel(obj)], c.expect[obj], `${c.name}: ${obj}`);
             }
         }
     }

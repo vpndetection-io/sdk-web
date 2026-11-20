@@ -41,8 +41,9 @@ export function unmapped(ip: string): string {
 
 /**
  * The answer a bogon gets, in the full shape the API serves at its widest plan:
- * every flag present and false, every detail object present and empty, and
- * `location` and `asn` with every key empty, as the API answers a bogon.
+ * every flag present and false, every detail object present and empty, `web` an
+ * empty list, `hostname` an empty string, and `location`, `asn`, `company` and
+ * `abuse` with every key empty or zero, as the API answers a bogon.
  *
  * `isBogon` is true, as the API answers reserved space. Note this is deliberately the WIDEST shape regardless of your
  * plan, so do not infer which fields your plan includes from a bogon answer.
@@ -60,6 +61,14 @@ export function bogonResult(ip: string): Result {
         isDcproxy: false,
         isMobproxy: false,
         isPubproxy: false,
+        isAnycast: false,
+        isCarrier: false,
+        isSatellite: false,
+        isSsh: false,
+        isSmtp: false,
+        isWeb: false,
+        isDnsResolver: false,
+        isBittorrent: false,
         vpn: {},
         hosting: {},
         relay: {},
@@ -69,6 +78,13 @@ export function bogonResult(ip: string): Result {
         dcproxy: {},
         mobproxy: {},
         pubproxy: {},
+        carrier: {},
+        satellite: {},
+        ssh: {},
+        smtp: {},
+        web: [],
+        dnsResolver: {},
+        bittorrent: {},
         location: {
             continent: '',
             continent_name: '',
@@ -80,8 +96,30 @@ export function bogonResult(ip: string): Result {
             currency_symbol: '',
             flag_emoji: '',
             flag_unicode: '',
+            region: '',
+            region_code: '',
+            city: '',
+            postal_code: '',
+            latitude: 0,
+            longitude: 0,
+            accuracy_radius: 0,
+            geoname_id: '',
+            dma_code: '',
+            last_changed: '',
         },
-        asn: { asn: 0, name: '', domain: '', type: '', prefix: '' },
+        asn: { asn: 0, name: '', domain: '', type: '', prefix: '', country: '', rpki_status: '' },
+        company: { name: '', domain: '', type: '', country: '' },
+        hostname: '',
+        abuse: {
+            email: '',
+            name: '',
+            phone: '',
+            address: '',
+            country: '',
+            network: '',
+            validated: false,
+            unvalidated_since: '',
+        },
         raw: {} as LookupResponse,
     };
 }
