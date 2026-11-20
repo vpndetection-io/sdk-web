@@ -2,6 +2,13 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.6.0 - 2026-11-20
+
+### Features
+
+- Read the network, service, company and abuse members of a lookup ([`860bbe3`](https://github.com/vpndetection-io/sdk-web/commit/860bbe30b14051f8da844d1a8fdd5d5585aae346))
+- Re-pin the spec to 2026.11.20 and check each member it adds to a lookup ([`886f763`](https://github.com/vpndetection-io/sdk-web/commit/886f763dcf2d840b81ac72c727dd374e7c0ad325))
+
 ## 1.5.2 - 2026-11-19
 
 ### Fixes
