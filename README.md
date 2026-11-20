@@ -48,7 +48,7 @@ console.log(result.asn?.name);          // who runs the announcing network
 
 ### With an API key
 
-Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field, 100 lookups a day. Create a key in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
@@ -129,7 +129,7 @@ const client = new VPNDetection({ cache: { max: 50_000, ttlMs: 6 * 60 * 60 * 100
 const clientNoCache = new VPNDetection({ cache: false });
 ```
 
-An answer with `trialExpired` or `capReached` true is cached for a minute at most, in memory and in a `store`, so a new day's trial or a raised cap reaches you within a minute.
+An answer with `trialExpired` or `capReached` true is cached for a minute at most, in memory and in a `store`, so a renewed trial or a raised cap reaches you within a minute.
 
 ### Keeping answers across a reload
 
@@ -251,12 +251,12 @@ The library is ES2022 and needs only what a browser has, `fetch` and, for PKCE, 
 
 ### Absent is not false
 
-Unlimited leaves out `isHosting`, `isCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its daily trial is spent, and a paid key's carries `capReached`, true once its organization's overage cap is reached and the answer has Unlimited's. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
+Unlimited leaves out `isHosting`, `isCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its trial is spent, and a paid key's carries `capReached`, true once its organization's overage cap is reached and the answer has Unlimited's. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
 
 ```js
 result.isHosting ?? false        // when you only want the flag
 result.isHosting === undefined   // on Unlimited: not in your plan
-result.trialExpired === true     // a free-plan key's daily trial is spent
+result.trialExpired === true     // a free-plan key's trial is spent
 result.capReached === true       // a paid key past its overage cap
 ```
 
