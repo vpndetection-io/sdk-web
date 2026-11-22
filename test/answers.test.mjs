@@ -240,6 +240,45 @@ test('a member of the wrong type is a retried server_error carrying its status',
     assert.equal(c.calls.length, 1);
 });
 
+// Every answer carries the AS's country and RPKI status, as the API documents, so
+// an AS without either, or with either null, is no answer: through 1.6.1 it came
+// back as served.
+test('an AS without its country or RPKI status is a retried server_error', async () => {
+    const asn = {
+        asn: 15169, name: 'Google LLC', domain: 'google.com', type: 'hosting', prefix: '66.249.64.0/20', country: 'US',
+        rpki_status: 'valid',
+    };
+    const { country: _country, ...noCountry } = asn;
+    const { rpki_status: _rpki, ...noRpki } = asn;
+    const cases = {
+        'no country': noCountry, 'no rpki_status': noRpki,
+        'a null country': { ...asn, country: null }, 'a null rpki_status': { ...asn, rpki_status: null },
+    };
+    const calls = [[(c) => c.lookup(IP), 'lookup'], [(c) => c.myIp(), 'myIp']];
+    for (const [call, name] of calls) {
+        const whole = rawClient(body(JSON.stringify({ ip: IP, is_vpn: false, asn: asn })));
+        assert.deepEqual((await call(whole.client)).asn, asn, `${name} reads a whole AS`);
+    }
+    // Concurrently, since each sits out the retries' backoff.
+    await Promise.all(calls.flatMap(([call, name]) => Object.entries(cases).map(async ([kind, served]) => {
+        const c = rawClient(body(JSON.stringify({ ip: IP, is_vpn: false, asn: served })));
+        await assert.rejects(() => call(c.client), (err) => {
+            assert.equal(err.kind, 'server_error', `${name} ${kind}: ${err.message}`);
+            assert.equal(err.status, 200, `${name} ${kind}`);
+            return true;
+        });
+        assert.equal(c.calls.length, 3, `${name} ${kind} is retried`);
+    })));
+    for (const [kind, served] of Object.entries(cases)) {
+        const results = { [IP]: { ip: IP, is_vpn: false, asn: asn }, [OTHER]: { ip: OTHER, is_vpn: false, asn: served } };
+        const c = rawClient(body(JSON.stringify({ results: results, errors: {} })));
+        const out = await c.client.lookupBatch([IP, OTHER]);
+        assert.deepEqual(out.get(IP).asn, asn, kind);
+        assert.equal(out.get(OTHER).kind, 'server_error', `batch ${kind}`);
+        assert.equal(out.get(OTHER).status, 200, `batch ${kind}`);
+    }
+});
+
 // RFC 3339 alone, on a day that exists.
 test('a date or date-time that is not RFC 3339 is a retried server_error', async () => {
     const dateTimes = ['2026-10-05', '2026-10-05T10:00:00', '2026-10-05T10:00:00+05', '2026-10-05T10:00Z',

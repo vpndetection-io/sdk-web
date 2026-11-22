@@ -9,7 +9,7 @@ export const LOCATION_MEMBERS = [
     'continent', 'continent_name', 'country', 'country_name', 'timezone', 'currency_code', 'currency_name',
     'currency_symbol', 'flag_emoji', 'flag_unicode',
 ] as const;
-export const ASN_MEMBERS = ['asn', 'name', 'domain', 'type', 'prefix'] as const;
+export const ASN_MEMBERS = ['asn', 'name', 'domain', 'type', 'prefix', 'country', 'rpki_status'] as const;
 export const COMPANY_MEMBERS = ['name', 'domain'] as const;
 export const ABUSE_CONTACT_MEMBERS = ['email'] as const;
 export const WEB_DETAIL_MEMBERS = [
