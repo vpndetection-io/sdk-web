@@ -2,6 +2,16 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.7.0 - 2026-11-22
+
+### Features
+
+- Read whether a bot uses an address, and whose: isBot and bot ([`bffeb43`](https://github.com/vpndetection-io/sdk-web/commit/bffeb43d45942c37dc789534347b19e38ef33b7c))
+
+### Fixes
+
+- Refuse an answer whose AS lacks its country or RPKI status ([`67a071a`](https://github.com/vpndetection-io/sdk-web/commit/67a071a1ff9318aa2a69fde76c77c28fcca5d616))
+
 ## 1.6.1 - 2026-11-22
 
 ### Fixes
