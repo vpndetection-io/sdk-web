@@ -70,6 +70,18 @@ if (READS_NETWORK_MEMBERS) {
     });
 }
 
+// is_bot and bot, read by the client from 1.7.0. A populated bot carries its ten
+// documented keys; Unlimited answers is_bot and leaves bot out.
+if (needsVersion('1.7.0', 'is_bot and bot') === false) {
+    MEMBERS.bot = {
+        required: [
+            'provider', 'provider_name', 'agents', 'categories', 'verified', 'identity', 'verified_by', 'confidence',
+            'first_seen', 'last_seen',
+        ],
+        optional: [],
+    };
+}
+
 const camel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 
 // Wire name to the property the client maps it onto, which is what lets a test
