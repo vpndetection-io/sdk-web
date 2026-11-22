@@ -135,7 +135,7 @@ test('a bogon is answered locally in the full max shape', async () => {
 // here before it can pass vacuously.
 const DETAIL_KEYS = [
     'vpn', 'hosting', 'dcproxy', 'pubproxy', 'carrier', 'satellite', 'ssh', 'smtp', 'web', 'dns_resolver',
-    'bittorrent', 'location', 'asn', 'company', 'abuse', 'hostname',
+    'bittorrent', 'bot', 'location', 'asn', 'company', 'abuse', 'hostname',
 ];
 const EXPECT_KEYS = ['ip', 'isBogon', 'present', 'absent', 'emptyPresent', ...DETAIL_KEYS];
 

@@ -1,12 +1,27 @@
 import type {
-    AbuseContact, Asn, BitTorrentDetail, CarrierDetail, ClassDetail, Company, DnsResolverDetail, Location,
-    LookupResponse, ProxyDetail, PubproxyDetail, SatelliteDetail, SmtpDetail, SshDetail, VpnDetail, WebDetail,
+    AbuseContact, Asn as WireAsn, BitTorrentDetail, BotDetail, CarrierDetail, ClassDetail, Company, DnsResolverDetail,
+    Location, LookupResponse as WireLookupResponse, ProxyDetail, PubproxyDetail, SatelliteDetail, SmtpDetail,
+    SshDetail, VpnDetail, WebDetail,
 } from './generated/types.gen.js';
 
 export type {
-    AbuseContact, Asn, BitTorrentDetail, CarrierDetail, ClassDetail, Company, DnsResolverDetail, Location,
-    LookupResponse, ProxyDetail, PubproxyDetail, SatelliteDetail, SmtpDetail, SshDetail, VpnDetail, WebDetail,
+    AbuseContact, BitTorrentDetail, BotDetail, CarrierDetail, ClassDetail, Company, DnsResolverDetail, Location,
+    ProxyDetail, PubproxyDetail, SatelliteDetail, SmtpDetail, SshDetail, VpnDetail, WebDetail,
 };
+
+// Members every answer carries that an `Asn` written out by hand before 1.7.0
+// lacks. They stay optional in this type, so such code still compiles; the
+// client still refuses an answer without them. `Pick` fails to compile once the
+// spec drops either member, and the suite fails once it stops requiring them.
+
+/** The AS announcing an address. Every answer carries `country` and `rpki_status`. */
+export type Asn = Omit<WireAsn, 'country' | 'rpki_status'> & Partial<Pick<WireAsn, 'country' | 'rpki_status'>>;
+
+/**
+ * A lookup's answer as it came off the wire. `user_agent` is left out: it answers
+ * a user agent sent with the lookup, which this client sends none of.
+ */
+export type LookupResponse = Omit<WireLookupResponse, 'asn' | 'user_agent'> & { asn?: Asn };
 
 /**
  * What a lookup answers.
@@ -49,6 +64,11 @@ export interface Result {
     isDnsResolver?: boolean;
     isBittorrent?: boolean;
     /**
+     * Whether an automated client uses the address, such as a search engine's or an AI company's
+     * crawler, an uptime monitor or a webhook sender. Every plan includes this; `bot` says whose.
+     */
+    isBot?: boolean;
+    /**
      * On answers to a key on the free plan only: `false` while its organization's trial of every
      * field lasts, `true` once the answer has Unlimited's.
      */
@@ -77,6 +97,11 @@ export interface Result {
     web?: WebDetail[];
     dnsResolver?: DnsResolverDetail;
     bittorrent?: BitTorrentDetail;
+    /**
+     * Whose bot uses the address, what it does and whether its operator vouches for the address.
+     * Paid plans. `agents` and `categories` keep the API's order.
+     */
+    bot?: BotDetail;
 
     /**
      * Where the address is, on every answer, with or without a key: every key present, empty
@@ -112,7 +137,7 @@ const RESULT_NAMES: Record<Exclude<keyof LookupResponse, 'is_bogon'>, Exclude<ke
     is_resproxy: 'isResproxy', is_dcproxy: 'isDcproxy', is_mobproxy: 'isMobproxy', is_pubproxy: 'isPubproxy',
     is_anycast: 'isAnycast', is_carrier: 'isCarrier', is_satellite: 'isSatellite', is_ssh: 'isSsh',
     is_smtp: 'isSmtp', is_web: 'isWeb', is_dns_resolver: 'isDnsResolver', is_bittorrent: 'isBittorrent',
-    trial_expired: 'trialExpired', cap_reached: 'capReached',
+    is_bot: 'isBot', trial_expired: 'trialExpired', cap_reached: 'capReached', bot: 'bot',
     vpn: 'vpn', hosting: 'hosting', relay: 'relay', tor: 'tor', cdn: 'cdn', resproxy: 'resproxy', dcproxy: 'dcproxy',
     mobproxy: 'mobproxy', pubproxy: 'pubproxy', carrier: 'carrier', satellite: 'satellite', ssh: 'ssh', smtp: 'smtp',
     web: 'web', dns_resolver: 'dnsResolver', bittorrent: 'bittorrent', location: 'location', asn: 'asn',

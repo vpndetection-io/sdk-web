@@ -38,6 +38,7 @@ export const LOOKUP_TYPES: Record<string, Kind> = {
     mobproxy: 'object', pubproxy: 'object', carrier: 'object', satellite: 'object', ssh: 'object', smtp: 'object',
     web: 'array', dns_resolver: 'object', bittorrent: 'object', location: 'object', asn: 'object',
     company: 'object', hostname: 'string', abuse: 'object', trial_expired: 'boolean', cap_reached: 'boolean',
+    is_bot: 'boolean', bot: 'object', user_agent: 'object',
 };
 export const VPN_DETAIL_TYPES: Record<string, Kind> = {
     provider: 'string', provider_name: 'string', last_seen: 'date', confidence: 'string', method: 'string',
@@ -52,6 +53,10 @@ export const PROXY_DETAIL_TYPES: Record<string, Kind> = {
 export const PUBPROXY_DETAIL_TYPES: Record<string, Kind> = {
     entry: 'boolean', exit: 'boolean', protocols: 'array', num_ports: 'integer', num_proxies: 'integer',
     last_seen: 'date', last_usable: 'string',
+};
+export const BOT_DETAIL_TYPES: Record<string, Kind> = {
+    provider: 'string', provider_name: 'string', agents: 'array', categories: 'array', verified: 'boolean',
+    identity: 'string', verified_by: 'string', confidence: 'string', first_seen: 'string', last_seen: 'string',
 };
 export const CARRIER_DETAIL_TYPES: Record<string, Kind> = {
     name: 'string', mcc: 'string', mnc: 'string', country: 'string', confidence: 'string',
@@ -189,7 +194,7 @@ const DETAILS: [string, Record<string, Kind>][] = [
     ['dcproxy', PROXY_DETAIL_TYPES], ['mobproxy', PROXY_DETAIL_TYPES], ['pubproxy', PUBPROXY_DETAIL_TYPES],
     ['carrier', CARRIER_DETAIL_TYPES], ['satellite', SATELLITE_DETAIL_TYPES], ['ssh', SSH_DETAIL_TYPES],
     ['smtp', SMTP_DETAIL_TYPES], ['dns_resolver', DNS_RESOLVER_DETAIL_TYPES],
-    ['bittorrent', BITTORRENT_DETAIL_TYPES],
+    ['bittorrent', BITTORRENT_DETAIL_TYPES], ['bot', BOT_DETAIL_TYPES],
 ];
 
 const SHARED: [string, readonly string[], Record<string, Kind>][] = [
@@ -204,6 +209,7 @@ export function isLookup(data: unknown): boolean {
         && DETAILS.every(([member, types]) => optional(data[member], (detail) => typed(detail, [], types)))
         && optional(data['pubproxy'], (pubproxy) => lists(pubproxy, 'protocols', isString))
         && optional(data['bittorrent'], (bittorrent) => lists(bittorrent, 'clients', isString))
+        && optional(data['bot'], (bot) => lists(bot, 'agents', isString) && lists(bot, 'categories', isString))
         && optional(data['web'], (web) => every(web, (row) => typed(row, WEB_DETAIL_MEMBERS, WEB_DETAIL_TYPES)))
         && SHARED.every(([member, required, types]) => optional(data[member], (o) => typed(o, required, types)));
 }

@@ -10,7 +10,7 @@ export {
 export type { ErrorKind } from './errors.js';
 export type {
     Result, VpnDetail, ClassDetail, ProxyDetail, PubproxyDetail, CarrierDetail, SatelliteDetail, SshDetail,
-    SmtpDetail, WebDetail, DnsResolverDetail, BitTorrentDetail, Location, Asn, Company, AbuseContact, LookupResponse,
+    SmtpDetail, WebDetail, DnsResolverDetail, BitTorrentDetail, BotDetail, Location, Asn, Company, AbuseContact, LookupResponse,
 } from './types.js';
 export type {
     Entitlement, EntitlementApikey, EntitlementPlan, EntitlementUsage,

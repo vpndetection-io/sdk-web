@@ -202,6 +202,12 @@ test('a member of the wrong type is a retried server_error carrying its status',
         'a satellite asn of "1"': [look, { ...lookup, satellite: { asn: '1' } }],
         'ssh port of "22"': [look, { ...lookup, ssh: { port: '22' } }],
         'bittorrent clients of [1]': [look, { ...lookup, bittorrent: { clients: [1] } }],
+        'is_bot as "yes"': [look, { ...lookup, is_bot: 'yes' }],
+        'a bot detail of "x"': [look, { ...lookup, bot: 'x' }],
+        'bot verified of "yes"': [look, { ...lookup, bot: { verified: 'yes' } }],
+        'bot agents of [1]': [look, { ...lookup, bot: { agents: [1] } }],
+        'bot categories of "seo"': [look, { ...lookup, bot: { categories: 'seo' } }],
+        'bot provider of 1': [look, { ...lookup, bot: { provider: 1 } }],
         'a web detail of {}': [look, { ...lookup, web: {} }],
         'a web row without its members': [look, { ...lookup, web: [{ port: 80 }] }],
         'a company without its domain': [look, { ...lookup, company: { name: 'n' } }],
@@ -324,7 +330,7 @@ test('each date kind is the format the spec names', async () => {
         CarrierDetail: shapes.CARRIER_DETAIL_TYPES, SatelliteDetail: shapes.SATELLITE_DETAIL_TYPES,
         SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
         DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
-        Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
+        BotDetail: shapes.BOT_DETAIL_TYPES, Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
     };
     const kinds = new Map();
     for (const [name, table] of Object.entries(tables)) {
@@ -378,7 +384,7 @@ test('each type table covers every member of its generated type', async () => {
         CarrierDetail: shapes.CARRIER_DETAIL_TYPES, SatelliteDetail: shapes.SATELLITE_DETAIL_TYPES,
         SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
         DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
-        Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
+        BotDetail: shapes.BOT_DETAIL_TYPES, Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
     };
     for (const [name, table] of Object.entries(tables)) {
         assert.deepEqual(Object.keys(table).sort(), members(name), name);
