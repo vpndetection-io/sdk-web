@@ -1,4 +1,4 @@
-// A spent trial's or a reached cap's answer ends with a new UTC day or a raised
+// A spent trial's or a reached cap's answer ends with a renewed trial or a raised
 // cap, so it is cached for a minute at most, in memory and in a store, rather than
 // for the client's TTL.
 
