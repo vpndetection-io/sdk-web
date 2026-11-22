@@ -30,7 +30,7 @@ It runs in Chrome and Edge 109, Firefox 115 ESR and Safari 16.4 or newer. TypeSc
 
 ## Usage
 
-**No API key needed to start.** Unlimited, the free plan, answers `ip`, `is_vpn`, Tor and relay detection, `is_anycast`, `hostname` (the reverse DNS name), country-level `location` and `asn` with the AS's country and RPKI status, with no daily or monthly cap, with a key or without one. In a page the address calling is the visitor's, so `myIp` tells you about the visitor:
+**No API key needed to start.** Unlimited, the free plan, answers `ip`, `is_vpn`, Tor and relay detection, `is_bot` (whether a bot such as a crawler uses the address), `is_anycast`, `hostname` (the reverse DNS name), country-level `location` and `asn` with the AS's country and RPKI status, with no daily or monthly cap, with a key or without one. In a page the address calling is the visitor's, so `myIp` tells you about the visitor:
 
 ```js
 import { VPNDetection } from 'vpndetection-web';
@@ -48,7 +48,7 @@ console.log(result.asn?.name);          // who runs the announcing network
 
 ### With an API key
 
-Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), `bot` (whose bot it is and whether its operator vouches for the address), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
@@ -122,7 +122,7 @@ const result2 = await client.lookup('45.83.91.1');
 console.log(result2.isVpn);  // true, no API request, result was cached
 ```
 
-You can change the default cache variables (max size, TTL, etc) on initialization, or even disable it:
+You can change the default cache variables (max size, TTL, etc) on initialization, or even disable it. Each is a whole number from 1:
 
 ```js
 const client = new VPNDetection({ cache: { max: 50_000, ttlMs: 6 * 60 * 60 * 1000 } });
@@ -251,7 +251,7 @@ The library is ES2022 and needs only what a browser has, `fetch` and, for PKCE, 
 
 ### Absent is not false
 
-Unlimited leaves out `isHosting`, `isCdn`, the four proxy flags, the carrier, satellite and service flags, `company` and `abuse`, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its trial is spent, and a paid key's carries `capReached`, true once its organization's overage cap is reached and the answer has Unlimited's. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
+Unlimited leaves out `isHosting`, `isCdn`, the four proxy flags, the carrier, satellite and service flags, `bot`, `company` and `abuse`, and of the detail behind each flag it answers only Tor's and relay's; a free-plan key's answer carries `trialExpired`, true once its trial is spent, and a paid key's carries `capReached`, true once its organization's overage cap is reached and the answer has Unlimited's. A field your key does not include is `undefined`, which means "not in your plan" rather than "checked, and no".
 
 ```js
 result.isHosting ?? false        // when you only want the flag
