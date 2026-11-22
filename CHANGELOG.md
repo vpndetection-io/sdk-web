@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.6.1 - 2026-11-22
+
+### Fixes
+
+- Refuse a cache TTL or size that is not a whole number from 1 ([`329144d`](https://github.com/vpndetection-io/sdk-web/commit/329144d843305ac858ebb362ffc0cdb9b5a1f37a))
+
 ## 1.6.0 - 2026-11-20
 
 ### Features
