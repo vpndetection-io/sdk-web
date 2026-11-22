@@ -27,10 +27,10 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const BATCH_MAX = 1000;
 
 export interface CacheOptions {
-    /** Maximum number of addresses held in memory. Default 10000. */
+    /** Maximum number of addresses held in memory, a whole number from 1. Default 10000. */
     max?: number;
     /**
-     * How long an answer stays fresh, in milliseconds. Default 1 hour. An answer
+     * How long an answer stays fresh, in whole milliseconds from 1. Default 1 hour. An answer
      * marked `trialExpired` or `capReached` stays a minute at most.
      */
     ttlMs?: number;
@@ -122,9 +122,9 @@ export class VPNDetection {
         this.limit = pLimit(checkConcurrency(options.concurrency) ?? 8);
 
         const cache = options.cache === false ? null : (options.cache ?? {});
-        const ttlMs = cache?.ttlMs ?? 60 * 60 * 1000;
+        const ttlMs = checkCacheOption('ttlMs', cache?.ttlMs) ?? 60 * 60 * 1000;
         this.cache = cache === null ? null : new LRUCache<string, Result, () => Promise<Result>>({
-            max: cache.max ?? 10_000,
+            max: checkCacheOption('max', cache.max) ?? 10_000,
             ttl: ttlMs,
             // Concurrent misses for one address share one request: every
             // `fetch()` while it is in flight gets the same promise, and a
@@ -459,6 +459,22 @@ function checkApiKey(apiKey: unknown): string | undefined {
         throw new VPNDetectionError('bad_request', 'apiKey must not contain a character past U+00FF');
     }
     return key === '' ? undefined : key;
+}
+
+/**
+ * A cache size or TTL refused where it is set, `null` reading as unset. lru-cache
+ * reads a zero or NaN TTL as none, which would keep every answer for good, a spent
+ * trial's included, and a zero size as no bound; anything else not whole it throws
+ * a bare TypeError for.
+ */
+function checkCacheOption(name: 'max' | 'ttlMs', value: number | null | undefined): number | undefined {
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    if (!(typeof value === 'number' && Number.isSafeInteger(value) && value >= 1)) {
+        throw new VPNDetectionError('bad_request', `cache.${name} must be a whole number from 1, got ${String(value)}`);
+    }
+    return value;
 }
 
 function unreadableEntry(ip: string): VPNDetectionError {

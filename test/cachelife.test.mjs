@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { VPNDetection } from '../dist/index.js';
+import { VPNDetection, VPNDetectionError } from '../dist/index.js';
 
 const HOUR = 60 * 60 * 1000;
 const MINUTE = 60 * 1000;
@@ -82,4 +82,23 @@ test('a reduced answer is still cached, so a repeat sends nothing', async () => 
 
     assert.equal(again.trialExpired, true);
     assert.equal(server.state.requests, 1);
+});
+
+// lru-cache reads a zero or NaN TTL as none, so a reduced answer would stay for good.
+test('a cache TTL or size that is not a whole number from 1 is refused where it is set', () => {
+    const refused = [
+        ['ttlMs', 0], ['ttlMs', NaN], ['ttlMs', -1], ['ttlMs', 1.5], ['ttlMs', Infinity], ['ttlMs', '1000'],
+        ['max', 0], ['max', NaN], ['max', -1], ['max', 1.5], ['max', Infinity], ['max', '10'],
+    ];
+    for (const [name, value] of refused) {
+        assert.throws(() => new VPNDetection({ fetch: api().fetch, cache: { [name]: value } }), (err) => {
+            assert.ok(err instanceof VPNDetectionError, `${name} ${String(value)}: wrong error type`);
+            assert.equal(err.kind, 'bad_request', `${name} ${String(value)}`);
+            assert.match(err.message, new RegExp(`cache\\.${name}`), `${name} ${String(value)}`);
+            return true;
+        });
+    }
+    for (const cache of [{ ttlMs: null, max: null }, { ttlMs: 1, max: 1 }]) {
+        assert.doesNotThrow(() => new VPNDetection({ fetch: api().fetch, cache: cache }));
+    }
 });
