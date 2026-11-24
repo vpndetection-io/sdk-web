@@ -2,6 +2,16 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.8.0 - 2026-11-24
+
+### Features
+
+- Send a visitor's user agent with a lookup, myIp or a batch ([`a091f21`](https://github.com/vpndetection-io/sdk-web/commit/a091f218f44eb1252efd083e7f96acb1dbb6f33b))
+
+### Fixes
+
+- Read the days of a bot, SSH, SMTP, web, DNS resolver or BitTorrent detail as dates ([`196428c`](https://github.com/vpndetection-io/sdk-web/commit/196428ceddc333aab346c78029c0e8f0b7bbb889))
+
 ## 1.7.0 - 2026-11-22
 
 ### Features
