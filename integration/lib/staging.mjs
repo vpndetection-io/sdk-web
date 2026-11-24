@@ -82,6 +82,11 @@ if (needsVersion('1.7.0', 'is_bot and bot') === false) {
     };
 }
 
+// user_agent, sent and read by the client from 1.8.0: present only when a lookup
+// sent a user agent, with every field, and then carrying its three documented keys.
+export const SENDS_USER_AGENT = needsVersion('1.8.0', 'user_agent');
+export const USER_AGENT_KEYS = ['agent', 'kind', 'verdict'];
+
 const camel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 
 // Wire name to the property the client maps it onto, which is what lets a test
@@ -95,6 +100,9 @@ if (READS_NETWORK_MEMBERS) {
     for (const name of ['is_anycast', 'is_web', 'web', 'company', 'hostname', 'abuse']) {
         RESULT_PROP[name] = camel(name);
     }
+}
+if (SENDS_USER_AGENT === false) {
+    RESULT_PROP.user_agent = 'userAgent';
 }
 
 export function flagProp(name) {

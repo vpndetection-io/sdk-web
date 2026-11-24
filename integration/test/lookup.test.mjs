@@ -14,10 +14,10 @@ import { test } from 'node:test';
 import { VPNDetection, VPNDetectionError, isBogon } from 'vpndetection-web';
 
 import {
-    INSTALLED_VERSION, MEMBERS, PROBE, READS_NETWORK_MEMBERS, RESULT_PROP, STAGING, answerFor,
-    assertServedByTier, assertShape, clientFor, detailProp, flagProp,
+    INSTALLED_VERSION, MEMBERS, PROBE, READS_NETWORK_MEMBERS, RESULT_PROP, SENDS_USER_AGENT, STAGING, USER_AGENT_KEYS,
+    answerFor, assertServedByTier, assertShape, clientFor, detailProp, flagProp,
 } from '../lib/staging.mjs';
-import { RUNGS, UNAUTH_RUNG, observableRungs, skipFor } from '../lib/tiers.mjs';
+import { MAX_RUNG, RUNGS, UNAUTH_RUNG, observableRungs, skipFor } from '../lib/tiers.mjs';
 
 // The ladder needs two rungs to say anything. The unauthenticated one is always
 // there, so this only fires when no tier secret at all is configured.
@@ -266,4 +266,24 @@ test('a store keeps a served answer for the next client', async () => {
         },
     });
     assert.equal((await second.lookup(PROBE)).ip, PROBE);
+});
+
+// Googlebot's own user agent from one of Google's crawler addresses: the answer
+// names the agent and says whether the address bears it out, in its three
+// documented keys, for a lookup and for a batch entry alike.
+test('a user agent sent with a lookup or a batch comes back as its verdict', {
+    skip: skipFor(MAX_RUNG) || SENDS_USER_AGENT,
+}, async () => {
+    const googlebot = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+    const crawler = '66.249.66.1';
+    const client = clientFor(MAX_RUNG);
+    const result = await client.lookup(crawler, { userAgent: googlebot });
+    assert.deepEqual(Object.keys(result.raw.user_agent).sort(), USER_AGENT_KEYS);
+    assert.deepEqual(result.userAgent, result.raw.user_agent);
+    assert.equal(result.userAgent.agent, 'Googlebot');
+    assert.ok(['verified', 'spoofed', 'unverifiable', 'not_bot'].includes(result.userAgent.verdict));
+    assert.equal((await client.lookup(crawler)).userAgent, undefined, 'the plain answer carries none');
+    const batch = await clientFor(MAX_RUNG).lookupBatch([crawler, PROBE], { userAgents: { [crawler]: googlebot } });
+    assert.deepEqual(batch.get(crawler).userAgent, result.userAgent);
+    assert.equal(batch.get(PROBE).userAgent, undefined);
 });
