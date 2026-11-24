@@ -56,7 +56,7 @@ export const PUBPROXY_DETAIL_TYPES: Record<string, Kind> = {
 };
 export const BOT_DETAIL_TYPES: Record<string, Kind> = {
     provider: 'string', provider_name: 'string', agents: 'array', categories: 'array', verified: 'boolean',
-    identity: 'string', verified_by: 'string', confidence: 'string', first_seen: 'string', last_seen: 'string',
+    identity: 'string', verified_by: 'string', confidence: 'string', first_seen: 'date', last_seen: 'date',
 };
 export const CARRIER_DETAIL_TYPES: Record<string, Kind> = {
     name: 'string', mcc: 'string', mnc: 'string', country: 'string', confidence: 'string',
@@ -66,24 +66,24 @@ export const SATELLITE_DETAIL_TYPES: Record<string, Kind> = {
     asn: 'integer', confidence: 'string',
 };
 export const SSH_DETAIL_TYPES: Record<string, Kind> = {
-    port: 'integer', banner: 'string', host_key_fp: 'string', session_ok: 'boolean', first_seen: 'string',
-    last_seen: 'string',
+    port: 'integer', banner: 'string', host_key_fp: 'string', session_ok: 'boolean', first_seen: 'date',
+    last_seen: 'date',
 };
 export const SMTP_DETAIL_TYPES: Record<string, Kind> = {
-    port: 'integer', banner: 'string', session_ok: 'boolean', first_seen: 'string', last_seen: 'string',
+    port: 'integer', banner: 'string', session_ok: 'boolean', first_seen: 'date', last_seen: 'date',
 };
 export const WEB_DETAIL_TYPES: Record<string, Kind> = {
     port: 'integer', tls_ok: 'boolean', session_ok: 'boolean', status_code: 'integer', server: 'string',
     location: 'string', title: 'string', cert_subject_cn: 'string', cert_subject_o: 'string',
-    cert_issuer_dn: 'string', cert_browser_trusted: 'boolean', tls_version: 'string', first_seen: 'string',
-    last_seen: 'string',
+    cert_issuer_dn: 'string', cert_browser_trusted: 'boolean', tls_version: 'string', first_seen: 'date',
+    last_seen: 'date',
 };
 export const DNS_RESOLVER_DETAIL_TYPES: Record<string, Kind> = {
     port: 'integer', recursion_available: 'boolean', rcode: 'integer', answer_correct: 'boolean',
-    first_seen: 'string', last_seen: 'string',
+    first_seen: 'date', last_seen: 'date',
 };
 export const BITTORRENT_DETAIL_TYPES: Record<string, Kind> = {
-    verified: 'boolean', id_matches_ip: 'boolean', first_seen: 'string', last_seen: 'string',
+    verified: 'boolean', id_matches_ip: 'boolean', first_seen: 'date', last_seen: 'date',
     last_reachable: 'string', days_seen: 'integer', num_ports: 'integer', peak_num_ports: 'integer',
     indexer: 'boolean', clients: 'array',
 };
