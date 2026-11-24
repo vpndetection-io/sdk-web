@@ -1,5 +1,5 @@
 export { VPNDetection, DEFAULT_BASE_URL } from './client.js';
-export type { Options, CacheOptions, LookupOptions, BatchOptions } from './client.js';
+export type { Options, CacheOptions, CallOptions, LookupOptions, BatchOptions } from './client.js';
 export type { CacheStore } from './store.js';
 export { OauthApi } from './oauth.js';
 export type { OauthOptions, AuthorizationUrlOptions, OauthMetadata, TokenResponse, Pkce } from './oauth.js';
@@ -10,7 +10,7 @@ export {
 export type { ErrorKind } from './errors.js';
 export type {
     Result, VpnDetail, ClassDetail, ProxyDetail, PubproxyDetail, CarrierDetail, SatelliteDetail, SshDetail,
-    SmtpDetail, WebDetail, DnsResolverDetail, BitTorrentDetail, BotDetail, Location, Asn, Company, AbuseContact, LookupResponse,
+    SmtpDetail, WebDetail, DnsResolverDetail, BitTorrentDetail, BotDetail, UserAgentVerdict, Location, Asn, Company, AbuseContact, LookupResponse,
 } from './types.js';
 export type {
     Entitlement, EntitlementApikey, EntitlementPlan, EntitlementUsage,

@@ -4,7 +4,9 @@ import pLimit from 'p-limit';
 import { createClient, createConfig } from './generated/client/index.js';
 import type { Client } from './generated/client/index.js';
 import { lookupBatch, lookupIp, lookupMyIp, myEntitlement } from './generated/sdk.gen.js';
-import type { BatchLookupResponse, Entitlement, LookupResponse } from './generated/types.gen.js';
+import type {
+    BatchLookupRequest, BatchLookupResponse, Entitlement, LookupResponse,
+} from './generated/types.gen.js';
 
 import { bogonResult, isBogon, unmapped } from './bogon.js';
 import { errorFromEntry, VPNDetectionError } from './errors.js';
@@ -12,7 +14,7 @@ import { OauthApi } from './oauth.js';
 import { isBatch, isBatchError, isEntitlement, isLookup } from './shapes.js';
 import { isCacheStore, lifeMs, storeScope, StoreTier, type CacheStore } from './store.js';
 import {
-    asError, checkConcurrency, checkRetries, checkTimeout, deadline, readable, withRetry,
+    asError, checkConcurrency, checkRetries, checkTimeout, deadline, readable, strictEncode, withRetry,
 } from './transport.js';
 import { toResult, type Result } from './types.js';
 
@@ -67,18 +69,34 @@ export interface Options {
     fetch?: typeof globalThis.fetch;
 }
 
-/** Per-call overrides for a single lookup. Anything omitted falls back to the client's setting. */
-export interface LookupOptions {
+/** Per-call overrides for one call. Anything omitted falls back to the client's setting. */
+export interface CallOptions {
     /** Retry attempts for a transient failure, a whole number from 0. */
     retries?: number;
     /** How long one attempt may take before it is abandoned, in milliseconds. */
     timeoutMs?: number;
 }
 
+/** Per-call options for `lookup` and `myIp`. */
+export interface LookupOptions extends CallOptions {
+    /**
+     * The `User-Agent` of the client that came from this address. With every field, on a paid
+     * plan or the trial, the answer's `userAgent` then names the agent it claims to be and whether
+     * this address bears that out. The empty string sends none, and a longer one than the API's
+     * 1024 characters is sent whole for the API to cut.
+     */
+    userAgent?: string;
+}
+
 /** Per-call overrides for one batch. Anything omitted falls back to the client's setting. */
-export interface BatchOptions extends LookupOptions {
+export interface BatchOptions extends CallOptions {
     /** Concurrent batch requests for THIS batch only. */
     concurrency?: number;
+    /**
+     * Each address's `User-Agent`, keyed by the address as you pass it in `ips`, sent as
+     * `lookup`'s `userAgent` is. An address left out, or given the empty string, sends none.
+     */
+    userAgents?: Readonly<Record<string, string>> | ReadonlyMap<string, string>;
 }
 
 /**
@@ -90,9 +108,11 @@ export interface BatchOptions extends LookupOptions {
  */
 export class VPNDetection {
     private readonly client: Client;
-    // Keyed by address. The context is how a call sends the request when the
-    // address has none in flight: `fetch()` runs it synchronously, so a batch
-    // knows which addresses it leads before it builds a chunk.
+    // Keyed by address, and by the user agent sent with it (`cacheKey`): an
+    // answer to one carries that agent's verdict. The context is how a call
+    // sends the request when the key has none in flight: `fetch()` runs it
+    // synchronously, so a batch knows which addresses it leads before it builds
+    // a chunk.
     private readonly cache: LRUCache<string, Result, () => Promise<Result>> | null;
     private readonly store: StoreTier | null;
     private readonly limit: ReturnType<typeof pLimit>;
@@ -170,37 +190,44 @@ export class VPNDetection {
      * call that led it. An IPv4-mapped address (`::ffff:8.8.8.8`) is the IPv4
      * address it carries: judged, sent and cached as that, so the answer names
      * `8.8.8.8`.
+     *
+     * With `userAgent`, the answer is cached, stored and shared on the address and
+     * that agent together: apart from the address's plain answer and from another
+     * agent's. A bogon's answer carries no `userAgent`.
      */
     async lookup(ip: string, options: LookupOptions = {}): Promise<Result> {
         // First, or a bogon and a cached address would answer any value.
         checkTimeout(options.timeoutMs);
         checkRetries(options.retries);
+        const agent = checkUserAgent(options.userAgent);
         const addr = unmapped(ip);
         if (isBogon(addr)) {
             return bogonResult(addr);
         }
         if (this.cache === null) {
-            return this.serve(addr, options);
+            return this.serve(addr, agent, options);
         }
-        return (await this.cache.fetch(addr, { context: () => this.answer(addr, options) }))!;
+        return (await this.cache.fetch(cacheKey(addr, agent), {
+            context: () => this.answer(addr, agent, options),
+        }))!;
     }
 
     // A miss in memory: the store's answer if it holds one, else the API's, kept.
-    private async answer(ip: string, options: LookupOptions): Promise<Result> {
-        const stored = await this.store?.get(ip);
+    private async answer(ip: string, agent: string | undefined, options: CallOptions): Promise<Result> {
+        const stored = await this.store?.get(ip, agent);
         if (stored !== undefined) {
             return stored;
         }
-        const served = await this.serve(ip, options);
-        await this.store?.set(ip, served);
+        const served = await this.serve(ip, agent, options);
+        await this.store?.set(ip, agent, served);
         return served;
     }
 
-    private async serve(ip: string, options: LookupOptions): Promise<Result> {
+    private async serve(ip: string, agent: string | undefined, options: CallOptions): Promise<Result> {
         const timeoutMs = options.timeoutMs ?? this.timeoutMs;
         return withRetry(options.retries ?? this.retries, async () => {
             const res = await deadline(timeoutMs, (signal) => lookupIp({
-                client: this.client, path: { ip: ip }, signal: signal,
+                client: this.client, path: { ip: ip }, signal: signal, ...agentQuery(agent),
             }));
             return toResult(readable<LookupResponse>(res, isLookup));
         });
@@ -217,13 +244,16 @@ export class VPNDetection {
      *
      * Deliberately NOT cached. The cache is keyed by address, and which
      * address this is IS the question: a device that moves between networks
-     * would otherwise be told where it used to be.
+     * would otherwise be told where it used to be. `userAgent` is sent as
+     * `lookup` sends it.
      */
     async myIp(options: LookupOptions = {}): Promise<Result> {
         const timeoutMs = checkTimeout(options.timeoutMs) ?? this.timeoutMs;
-        return withRetry(checkRetries(options.retries) ?? this.retries, async () => {
+        const retries = checkRetries(options.retries) ?? this.retries;
+        const agent = checkUserAgent(options.userAgent);
+        return withRetry(retries, async () => {
             const res = await deadline(timeoutMs, (signal) => lookupMyIp({
-                client: this.client, signal: signal,
+                client: this.client, signal: signal, ...agentQuery(agent),
             }));
             return toResult(readable<LookupResponse>(res, isLookup));
         });
@@ -248,7 +278,7 @@ export class VPNDetection {
      * Deliberately NOT cached: the whole point is what has been spent, and a
      * cached answer is a wrong one within seconds of the next request.
      */
-    async myEntitlement(options: LookupOptions = {}): Promise<Entitlement> {
+    async myEntitlement(options: CallOptions = {}): Promise<Entitlement> {
         const timeoutMs = checkTimeout(options.timeoutMs) ?? this.timeoutMs;
         return withRetry(checkRetries(options.retries) ?? this.retries, async () => {
             const res = await deadline(timeoutMs, (signal) => myEntitlement({
@@ -279,6 +309,12 @@ export class VPNDetection {
      * `unauthorized` error, and a free-plan key's request of two or more a
      * `bad_request` (HTTP 402). A request of one address is answered as its
      * lookup would be.
+     *
+     * `userAgents` sends each address's agent, as `user_agents` keyed by the address
+     * as the request sends it (an IPv4-mapped one as the IPv4 address it carries),
+     * and only in a request where one of its addresses has one. Each address's
+     * answer is cached, stored and shared on the address and its agent together,
+     * as `lookup`'s is.
      */
     async lookupBatch(
         ips: Iterable<string>, options: BatchOptions = {},
@@ -286,6 +322,7 @@ export class VPNDetection {
         const concurrency = checkConcurrency(options.concurrency);
         checkTimeout(options.timeoutMs);
         checkRetries(options.retries);
+        const agents = checkUserAgents(options.userAgents);
         const asked = [...new Set(ips)];
         const unique = [...new Set(asked.map(unmapped))];
         const out = new Map<string, Result | VPNDetectionError>();
@@ -301,7 +338,8 @@ export class VPNDetection {
                 out.set(ip, bogonResult(ip));
                 continue;
             }
-            const hit = this.cache?.get(ip);
+            const key = cacheKey(ip, agents.get(ip));
+            const hit = this.cache?.get(key);
             if (hit !== undefined) {
                 out.set(ip, hit);
                 continue;
@@ -310,7 +348,7 @@ export class VPNDetection {
                 pending.push(ip);
                 continue;
             }
-            shared.push([ip, this.cache.fetch(ip, {
+            shared.push([ip, this.cache.fetch(key, {
                 context: () => {
                     const landing = deferred<Result>();
                     led.set(ip, landing);
@@ -319,7 +357,7 @@ export class VPNDetection {
                 },
             })]);
         }
-        const sending = this.store === null ? pending : await this.unstored(pending, led);
+        const sending = this.store === null ? pending : await this.unstored(pending, agents, led);
         // A per-call concurrency gets its own limiter; without one the call
         // would share the instance's budget and silently ignore the override.
         const limit = concurrency === undefined ? this.limit : pLimit(concurrency);
@@ -330,7 +368,7 @@ export class VPNDetection {
         await Promise.all([
             ...chunks.map((chunk) => limit(async () => {
                 const kept: Promise<void>[] = [];
-                for (const [ip, answer] of await this.lookupChunk(chunk, options)) {
+                for (const [ip, answer] of await this.lookupChunk(chunk, agents, options)) {
                     const landing = led.get(ip);
                     if (landing === undefined) {
                         out.set(ip, answer);
@@ -340,7 +378,7 @@ export class VPNDetection {
                         landing.resolve(answer);
                     }
                     if (this.store !== null && !(answer instanceof VPNDetectionError)) {
-                        kept.push(this.store.set(ip, answer));
+                        kept.push(this.store.set(ip, agents.get(ip), answer));
                     }
                 }
                 await Promise.all(kept);
@@ -361,8 +399,10 @@ export class VPNDetection {
 
     // The addresses this batch leads that the store does not hold, in the order
     // given. One the store holds lands at once, as a request's answer would.
-    private async unstored(ips: string[], led: Map<string, Deferred<Result>>): Promise<string[]> {
-        const stored = await Promise.all(ips.map((ip) => this.store!.get(ip)));
+    private async unstored(
+        ips: string[], agents: Map<string, string>, led: Map<string, Deferred<Result>>,
+    ): Promise<string[]> {
+        const stored = await Promise.all(ips.map((ip) => this.store!.get(ip, agents.get(ip))));
         return ips.filter((ip, i) => {
             const hit = stored[i];
             if (hit === undefined) {
@@ -378,15 +418,16 @@ export class VPNDetection {
     // retries exhausted - becomes every address's error, exactly as it would
     // have been had each been looked up alone.
     private async lookupChunk(
-        chunk: string[], options: LookupOptions,
+        chunk: string[], agents: Map<string, string>, options: CallOptions,
     ): Promise<Map<string, Result | VPNDetectionError>> {
         const out = new Map<string, Result | VPNDetectionError>();
         const timeoutMs = options.timeoutMs ?? this.timeoutMs;
+        const request = batchRequest(chunk, agents);
         let body: BatchLookupResponse;
         try {
             body = await withRetry(options.retries ?? this.retries, async () => {
                 const res = await deadline(timeoutMs, (signal) => lookupBatch({
-                    client: this.client, body: { ips: chunk }, signal: signal,
+                    client: this.client, body: request, signal: signal,
                 }));
                 return readable<BatchLookupResponse>(res, isBatch);
             });
@@ -475,6 +516,72 @@ function checkCacheOption(name: 'max' | 'ttlMs', value: number | null | undefine
         throw new VPNDetectionError('bad_request', `cache.${name} must be a whole number from 1, got ${String(value)}`);
     }
     return value;
+}
+
+/** The agent a call sends, `undefined` for none: the empty string is none, as the API reads `user_agent=`. */
+function checkUserAgent(userAgent: unknown): string | undefined {
+    if (userAgent === undefined || userAgent === null || userAgent === '') {
+        return undefined;
+    }
+    if (typeof userAgent !== 'string') {
+        throw new VPNDetectionError('bad_request', `userAgent must be a string, got ${typeof userAgent}`);
+    }
+    return userAgent;
+}
+
+/** A batch's user agents, keyed by each address as the batch sends it, every empty one dropped. */
+function checkUserAgents(userAgents: unknown): Map<string, string> {
+    const agents = new Map<string, string>();
+    if (userAgents === undefined || userAgents === null) {
+        return agents;
+    }
+    if (typeof userAgents !== 'object') {
+        throw new VPNDetectionError('bad_request', `userAgents must map addresses to agents, got ${typeof userAgents}`);
+    }
+    const entries = userAgents instanceof Map ? [...userAgents.entries()] : Object.entries(userAgents);
+    for (const [ip, agent] of entries) {
+        const checked = checkUserAgent(agent);
+        if (checked !== undefined) {
+            agents.set(unmapped(String(ip)), checked);
+        }
+    }
+    return agents;
+}
+
+// An answer to an address with an agent carries that agent's verdict, so it is
+// never served for the address alone or for another agent. The address alone
+// stays the key of a lookup sending none.
+function cacheKey(ip: string, agent: string | undefined): string {
+    return agent === undefined ? ip : JSON.stringify([ip, agent]);
+}
+
+/**
+ * One chunk's body: `user_agents` only when an address of THIS chunk has one, never
+ * `{}`, keyed by each address exactly as `ips` sends it.
+ */
+function batchRequest(chunk: string[], agents: Map<string, string>): BatchLookupRequest {
+    const sent = chunk.filter((ip) => agents.has(ip)).map((ip) => [ip, agents.get(ip)!] as const);
+    return sent.length === 0 ? { ips: chunk } : { ips: chunk, user_agents: Object.fromEntries(sent) };
+}
+
+/**
+ * The query a lookup sends its agent in, every reserved character percent-encoded,
+ * `+` among them, which a server reads as a space. Set by hand, so nothing checks
+ * the spec's 1024-character bound before the API cuts it.
+ */
+function agentQuery(agent: string | undefined): {
+    query?: { user_agent: string };
+    querySerializer?: (query: Record<string, unknown>) => string;
+} {
+    if (agent === undefined) {
+        return {};
+    }
+    return { query: { user_agent: agent }, querySerializer: strictQuery };
+}
+
+function strictQuery(query: Record<string, unknown>): string {
+    return Object.entries(query).filter(([, value]) => value !== undefined && value !== null)
+        .map(([name, value]) => `${strictEncode(name)}=${strictEncode(String(value))}`).join('&');
 }
 
 function unreadableEntry(ip: string): VPNDetectionError {

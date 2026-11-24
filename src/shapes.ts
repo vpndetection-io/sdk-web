@@ -22,6 +22,7 @@ export const ENTITLEMENT_MEMBERS = ['org_id', 'apikey', 'plan', 'usage'] as cons
 export const ENTITLEMENT_APIKEY_MEMBERS = ['id', 'allowed_cidrs'] as const;
 export const ENTITLEMENT_PLAN_MEMBERS = ['key', 'name', 'tier'] as const;
 export const ENTITLEMENT_USAGE_MEMBERS = ['requests', 'quota', 'window_start', 'window_end'] as const;
+export const USER_AGENT_MEMBERS = ['agent', 'kind', 'verdict'] as const;
 
 // Every member's type, nullable and optional ones included: one the spec requires
 // and never sends as null may not be null, and any other is null, absent or of its
@@ -58,6 +59,8 @@ export const BOT_DETAIL_TYPES: Record<string, Kind> = {
     provider: 'string', provider_name: 'string', agents: 'array', categories: 'array', verified: 'boolean',
     identity: 'string', verified_by: 'string', confidence: 'string', first_seen: 'date', last_seen: 'date',
 };
+// `verdict` is read as any string, so a verdict the API adds comes back as served.
+export const USER_AGENT_TYPES: Record<string, Kind> = { agent: 'string', kind: 'string', verdict: 'string' };
 export const CARRIER_DETAIL_TYPES: Record<string, Kind> = {
     name: 'string', mcc: 'string', mnc: 'string', country: 'string', confidence: 'string',
 };
@@ -202,6 +205,7 @@ const SHARED: [string, readonly string[], Record<string, Kind>][] = [
     ['asn', ASN_MEMBERS, ASN_TYPES],
     ['company', COMPANY_MEMBERS, COMPANY_TYPES],
     ['abuse', ABUSE_CONTACT_MEMBERS, ABUSE_CONTACT_TYPES],
+    ['user_agent', USER_AGENT_MEMBERS, USER_AGENT_TYPES],
 ];
 
 export function isLookup(data: unknown): boolean {

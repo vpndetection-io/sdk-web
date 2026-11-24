@@ -370,6 +370,7 @@ test('each date kind is the format the spec names', async () => {
         SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
         DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
         BotDetail: shapes.BOT_DETAIL_TYPES, Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
+        UserAgentVerdict: shapes.USER_AGENT_TYPES,
     };
     const kinds = new Map();
     for (const [name, table] of Object.entries(tables)) {
@@ -405,6 +406,7 @@ test('each checked member list is every required member of its generated type', 
     assert.deepEqual([...shapes.COMPANY_MEMBERS].sort(), required('Company'));
     assert.deepEqual([...shapes.ABUSE_CONTACT_MEMBERS].sort(), required('AbuseContact'));
     assert.deepEqual([...shapes.WEB_DETAIL_MEMBERS].sort(), required('WebDetail'));
+    assert.deepEqual([...shapes.USER_AGENT_MEMBERS].sort(), required('UserAgentVerdict'));
 });
 
 // Each type table names every member of its generated type, optional and nullable
@@ -424,6 +426,7 @@ test('each type table covers every member of its generated type', async () => {
         SshDetail: shapes.SSH_DETAIL_TYPES, SmtpDetail: shapes.SMTP_DETAIL_TYPES, WebDetail: shapes.WEB_DETAIL_TYPES,
         DnsResolverDetail: shapes.DNS_RESOLVER_DETAIL_TYPES, BitTorrentDetail: shapes.BITTORRENT_DETAIL_TYPES,
         BotDetail: shapes.BOT_DETAIL_TYPES, Company: shapes.COMPANY_TYPES, AbuseContact: shapes.ABUSE_CONTACT_TYPES,
+        UserAgentVerdict: shapes.USER_AGENT_TYPES,
     };
     for (const [name, table] of Object.entries(tables)) {
         assert.deepEqual(Object.keys(table).sort(), members(name), name);

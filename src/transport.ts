@@ -154,6 +154,14 @@ export async function withRetry<T>(retries: number, fn: () => Promise<T>): Promi
     }
 }
 
+/**
+ * `encodeURIComponent`, and `!'()*` too, so every reserved character goes out
+ * percent-encoded: `+` among them, which a server reads as a space.
+ */
+export function strictEncode(value: string): string {
+    return encodeURIComponent(value).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
 export function asError(err: unknown): VPNDetectionError {
     if (err instanceof VPNDetectionError) {
         return err;

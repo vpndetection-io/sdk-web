@@ -1,5 +1,6 @@
 import type { LookupResponse } from './generated/types.gen.js';
 import { isLookup } from './shapes.js';
+import { strictEncode } from './transport.js';
 import { toResult, type Result } from './types.js';
 
 /**
@@ -9,7 +10,9 @@ import { toResult, type Result } from './types.js';
  *
  * `key` is the address with a hash of the client's API key and base URL in front of
  * it, so clients holding different keys, and so entitled to different fields, can
- * share one store without ever reading each other's answers. `set` is handed how long
+ * share one store without ever reading each other's answers. A lookup sending a user
+ * agent appends it, `?user_agent=` and the agent percent-encoded, since its answer
+ * carries that agent's verdict. `set` is handed how long
  * the answer stays fresh; dropping it once that has passed is the store's job.
  */
 export interface CacheStore {
@@ -31,10 +34,10 @@ export class StoreTier {
         private readonly ttlMs: number,
     ) {}
 
-    async get(ip: string): Promise<Result | undefined> {
+    async get(ip: string, agent: string | undefined): Promise<Result | undefined> {
         let stored: unknown;
         try {
-            stored = await this.store.get(this.keyFor(ip));
+            stored = await this.store.get(this.keyFor(ip, agent));
         } catch {
             return undefined;
         }
@@ -45,16 +48,17 @@ export class StoreTier {
         return isLookup(raw) ? toResult(raw as LookupResponse) : undefined;
     }
 
-    async set(ip: string, result: Result): Promise<void> {
+    async set(ip: string, agent: string | undefined, result: Result): Promise<void> {
         try {
-            await this.store.set(this.keyFor(ip), result, lifeMs(result, this.ttlMs));
+            await this.store.set(this.keyFor(ip, agent), result, lifeMs(result, this.ttlMs));
         } catch {
             // Costs a request on the next miss, nothing more.
         }
     }
 
-    private keyFor(ip: string): string {
-        return `${this.scope}:${ip}`;
+    private keyFor(ip: string, agent: string | undefined): string {
+        const key = `${this.scope}:${ip}`;
+        return agent === undefined ? key : `${key}?user_agent=${strictEncode(agent)}`;
     }
 }
 
