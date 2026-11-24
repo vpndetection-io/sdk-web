@@ -48,7 +48,7 @@ console.log(result.asn?.name);          // who runs the announcing network
 
 ### With an API key
 
-Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), `bot` (whose bot it is and whether its operator vouches for the address), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), `bot` (whose bot it is and whether its operator vouches for the address), `user_agent` (whether a user agent you send is borne out by the address: see below), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
@@ -69,6 +69,25 @@ console.log(result.ip);   // the address we saw this call come from: in a page, 
 ```
 
 It is never cached, since which address the browser is calling from is the question, and a laptop moves between networks.
+
+### A visitor's user agent
+
+Pass the `User-Agent` of the client you are deciding on, and on a paid plan or the trial the answer's `userAgent` names the agent it claims to be and whether this address bears that out: `verified` when the agent's operator vouches for the address, `spoofed` when it does not, `unverifiable` for a bot nothing can confirm, `not_bot` for a browser, an app or a script. Check for the values you know: one the API adds later comes back as the string it served.
+
+```js
+const result = await client.lookup('66.249.66.1', {
+    userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+});
+console.log(result.userAgent);   // { agent: 'Googlebot', kind: 'bot', verdict: 'verified' }
+
+const mine = await client.myIp({ userAgent: navigator.userAgent });
+
+const results = await client.lookupBatch(['66.249.66.1', '45.83.91.1'], {
+    userAgents: { '66.249.66.1': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' },
+});
+```
+
+`userAgents` is keyed by each address as you pass it in the list, as an object or a `Map`. An empty user agent sends none, a long one is sent whole, and the agent is never kept. An answer to a user agent is cached apart from the address's plain answer and from another agent's. A private or reserved address is still answered locally and carries no `userAgent`; neither does an answer without every field.
 
 ### Your plan and usage
 
@@ -166,7 +185,7 @@ const store = {
 const client = new VPNDetection({ cache: { store: store } });
 ```
 
-`set` is told how long the answer stays fresh, and dropping it after that is the store's job. Each `key` carries a hash of the client's API key and base URL beside the address, so clients holding different keys can share one store without reading each other's answers. Bogons, errors, `myIp` and `myEntitlement` are never stored, and a store that fails costs a request, never an answer: a `get` that throws reads as a miss, and a `set` that throws is ignored.
+`set` is told how long the answer stays fresh, and dropping it after that is the store's job. Each `key` carries a hash of the client's API key and base URL beside the address, and the user agent sent with it, if any, so clients holding different keys can share one store without reading each other's answers. Bogons, errors, `myIp` and `myEntitlement` are never stored, and a store that fails costs a request, never an answer: a `get` that throws reads as a miss, and a `set` that throws is ignored.
 
 ### Private and reserved addresses
 
