@@ -2,6 +2,14 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.8.1 - 2026-11-25
+
+### Fixes
+
+- README: one paid plan, Data; the entitlement example names it ([`6687d06`](https://github.com/vpndetection-io/sdk-web/commit/6687d06a6d67a6b68244be5820eb20bf853e25ac))
+- Spec 2026.11.25: doc comments name a paid plan, the entitlement example the Data plan ([`e444316`](https://github.com/vpndetection-io/sdk-web/commit/e444316b7d73475817a43611fcca39528a5ce7b2))
+- Doc comments: the bot detail comes on a paid plan ([`b229dc7`](https://github.com/vpndetection-io/sdk-web/commit/b229dc74614a5060bc8b7ca81dff7ffc5a42a0d0))
+
 ## 1.8.0 - 2026-11-24
 
 ### Features
