@@ -96,7 +96,7 @@ export interface Result {
     bittorrent?: BitTorrentDetail;
     /**
      * Whose bot uses the address, what it does and whether its operator vouches for the address.
-     * Paid plans. `agents` and `categories` keep the API's order.
+     * On a paid plan. `agents` and `categories` keep the API's order.
      */
     bot?: BotDetail;
     /**
