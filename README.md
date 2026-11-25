@@ -48,7 +48,7 @@ console.log(result.asn?.name);          // who runs the announcing network
 
 ### With an API key
 
-Where the key stays private (see above), every paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), `bot` (whose bot it is and whether its operator vouches for the address), `user_agent` (whether a user agent you send is borne out by the address: see below), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. The plans differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
+Where the key stays private (see above), a paid plan answers every field: `is_hosting`, `is_cdn` and the four proxy flags as well, the carrier and satellite flags, the five service flags (SSH, SMTP, web, DNS resolver and BitTorrent), `bot` (whose bot it is and whether its operator vouches for the address), `user_agent` (whether a user agent you send is borne out by the address: see below), city-level `location`, the `company` and the `abuse` contact, and the provider (its ID and its name), confidence and last-seen detail behind each flag. Its quotas differ only in how many lookups they include, and a free account tries every field. Create a key in the [console](https://app.vpndetection.io), then pass it in:
 
 ```js
 const client = new VPNDetection({ apiKey: 'your-api-key' });
@@ -93,8 +93,8 @@ const results = await client.lookupBatch(['66.249.66.1', '45.83.91.1'], {
 
 ```js
 const ent = await client.myEntitlement();
-console.log(ent.plan.name);         // Max, what to show
-console.log(ent.plan.key);          // max, what to compare against
+console.log(ent.plan.name);         // Data, what to show
+console.log(ent.plan.key);          // data_4, what to compare against
 console.log(ent.usage.requests);    // 580
 console.log(ent.usage.window_end);  // when the allowance resets
 ```
