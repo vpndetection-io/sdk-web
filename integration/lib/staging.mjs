@@ -71,7 +71,8 @@ if (READS_NETWORK_MEMBERS) {
 }
 
 // is_bot and bot, read by the client from 1.7.0. A populated bot carries its ten
-// documented keys; Unlimited answers is_bot and leaves bot out.
+// documented keys. Both are a paid plan's: an Unlimited answer may carry is_bot while the API still
+// serves it, never bot, so every check here takes either present or absent.
 if (needsVersion('1.7.0', 'is_bot and bot') === false) {
     MEMBERS.bot = {
         required: [
@@ -81,6 +82,11 @@ if (needsVersion('1.7.0', 'is_bot and bot') === false) {
         optional: [],
     };
 }
+
+// The AS's type, a paid plan's member an Unlimited answer may carry or omit while the API still
+// serves it. The client reads an answer without it from 1.9.0, and a Result's `asn.type` stays a
+// string whichever it was: empty where the wire left it out.
+export const READS_KEYLESS_ASN = needsVersion('1.9.0', 'an answer without the AS type') === false;
 
 // user_agent, sent and read by the client from 1.8.0: present only when a lookup
 // sent a user agent, with every field, and then carrying its three documented keys.
@@ -234,6 +240,11 @@ export function assertShape(r) {
     }
     if (READS_NETWORK_MEMBERS) {
         assertWeb(r);
+    }
+    if (READS_KEYLESS_ASN && r.asn !== undefined && !r.isBogon) {
+        // Present or absent on the wire, a string in the result.
+        assert.equal(typeof r.asn.type, 'string', 'asn.type must be a string, empty when not served');
+        assert.equal(r.asn.type, r.raw.asn.type ?? '', 'asn.type is what was served, or empty');
     }
 }
 
