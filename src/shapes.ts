@@ -9,7 +9,9 @@ export const LOCATION_MEMBERS = [
     'continent', 'continent_name', 'country', 'country_name', 'timezone', 'currency_code', 'currency_name',
     'currency_symbol', 'flag_emoji', 'flag_unicode',
 ] as const;
-export const ASN_MEMBERS = ['asn', 'name', 'domain', 'type', 'prefix', 'country', 'rpki_status'] as const;
+export const ASN_MEMBERS = ['asn', 'name', 'domain', 'prefix', 'country', 'rpki_status'] as const;
+// A paid plan's member, which an answer may omit and may never send as null: the spec required it until 2026.11.26.
+export const ASN_NOT_NULL = ['type'] as const;
 export const COMPANY_MEMBERS = ['name', 'domain'] as const;
 export const ABUSE_CONTACT_MEMBERS = ['email'] as const;
 export const WEB_DETAIL_MEMBERS = [
@@ -165,12 +167,19 @@ function isDay(year: string, month: string, day: string): boolean {
         && date.getUTCDate() === Number(day);
 }
 
+// A member in `notNull` may be absent but never null, as one the spec once required.
 function typed(
-    value: unknown, required: readonly string[], types: Record<string, Kind>,
+    value: unknown, required: readonly string[], types: Record<string, Kind>, notNull: readonly string[] = [],
 ): value is Record<string, unknown> {
     return hasMembers(value, required) && Object.entries(types).every(([member, kind]) => {
         const v = value[member];
-        return v === undefined || v === null ? !required.includes(member) : isKind(v, kind);
+        if (v === undefined) {
+            return !required.includes(member);
+        }
+        if (v === null) {
+            return !required.includes(member) && !notNull.includes(member);
+        }
+        return isKind(v, kind);
     });
 }
 
@@ -200,12 +209,12 @@ const DETAILS: [string, Record<string, Kind>][] = [
     ['bittorrent', BITTORRENT_DETAIL_TYPES], ['bot', BOT_DETAIL_TYPES],
 ];
 
-const SHARED: [string, readonly string[], Record<string, Kind>][] = [
-    ['location', LOCATION_MEMBERS, LOCATION_TYPES],
-    ['asn', ASN_MEMBERS, ASN_TYPES],
-    ['company', COMPANY_MEMBERS, COMPANY_TYPES],
-    ['abuse', ABUSE_CONTACT_MEMBERS, ABUSE_CONTACT_TYPES],
-    ['user_agent', USER_AGENT_MEMBERS, USER_AGENT_TYPES],
+const SHARED: [string, readonly string[], Record<string, Kind>, readonly string[]][] = [
+    ['location', LOCATION_MEMBERS, LOCATION_TYPES, []],
+    ['asn', ASN_MEMBERS, ASN_TYPES, ASN_NOT_NULL],
+    ['company', COMPANY_MEMBERS, COMPANY_TYPES, []],
+    ['abuse', ABUSE_CONTACT_MEMBERS, ABUSE_CONTACT_TYPES, []],
+    ['user_agent', USER_AGENT_MEMBERS, USER_AGENT_TYPES, []],
 ];
 
 export function isLookup(data: unknown): boolean {
@@ -215,7 +224,9 @@ export function isLookup(data: unknown): boolean {
         && optional(data['bittorrent'], (bittorrent) => lists(bittorrent, 'clients', isString))
         && optional(data['bot'], (bot) => lists(bot, 'agents', isString) && lists(bot, 'categories', isString))
         && optional(data['web'], (web) => every(web, (row) => typed(row, WEB_DETAIL_MEMBERS, WEB_DETAIL_TYPES)))
-        && SHARED.every(([member, required, types]) => optional(data[member], (o) => typed(o, required, types)));
+        && SHARED.every(([member, required, types, notNull]) => optional(
+            data[member], (o) => typed(o, required, types, notNull),
+        ));
 }
 
 /** Both maps present. An entry in either is judged on its own, as that address's answer. */

@@ -13,9 +13,16 @@ export type {
 // lacks. They stay optional in this type, so such code still compiles; the
 // client still refuses an answer without them. `Pick` fails to compile once the
 // spec drops either member, and the suite fails once it stops requiring them.
+// `type` went the other way in spec 2026.11.26: the wire may omit it, and it keeps
+// the `string` it had, which `toResult` reads an absent one as empty for.
 
-/** The AS announcing an address. Every answer carries `country` and `rpki_status`. */
-export type Asn = Omit<WireAsn, 'country' | 'rpki_status'> & Partial<Pick<WireAsn, 'country' | 'rpki_status'>>;
+/**
+ * The AS announcing an address. Every answer carries `country` and `rpki_status`. `type` is a
+ * paid plan's: an Unlimited answer omits it, so it is an empty string in a `Result`'s `asn` and
+ * absent from `raw.asn`, which holds what was served.
+ */
+export type Asn = Omit<WireAsn, 'country' | 'rpki_status' | 'type'>
+    & Partial<Pick<WireAsn, 'country' | 'rpki_status'>> & Required<Pick<WireAsn, 'type'>>;
 
 /** A lookup's answer as it came off the wire. */
 export type LookupResponse = Omit<WireLookupResponse, 'asn'> & { asn?: Asn };
@@ -27,7 +34,8 @@ export type LookupResponse = Omit<WireLookupResponse, 'asn'> & { asn?: Asn };
  * could not check", so `undefined` and `false` are genuinely different answers:
  * `undefined` is "not in your plan", `false` is "checked, and no". Use
  * `?? false` when you only care whether the address is flagged. The same holds
- * inside `location` and `asn`, whose paid members are absent on Unlimited.
+ * inside `location` and `asn`, whose paid members are absent on Unlimited, bar `asn.type`: its
+ * type is `string`, so it reads as an empty string there.
  *
  * A detail object that is present but empty (`{}`, and `web`'s `[]`) means the
  * flag above it is false. A populated one always carries every one of its keys.
@@ -62,7 +70,8 @@ export interface Result {
     isBittorrent?: boolean;
     /**
      * Whether an automated client uses the address, such as a search engine's or an AI company's
-     * crawler, an uptime monitor or a webhook sender. Every plan includes this; `bot` says whose.
+     * crawler, an uptime monitor or a webhook sender. On a paid plan or the trial: absent on
+     * Unlimited. `bot` says whose.
      */
     isBot?: boolean;
     /**
@@ -114,7 +123,8 @@ export interface Result {
     location?: Location;
     /**
      * The AS announcing the address, on every answer, with or without a key: `asn` is 0 where none
-     * does. `country` and `rpki_status` are on every plan too.
+     * does. `country` and `rpki_status` are on every plan too; `type` is a paid plan's, an empty
+     * string on Unlimited.
      */
     asn?: Asn;
     /** The organization the address is assigned to. */
@@ -147,12 +157,17 @@ const RESULT_NAMES: Record<Exclude<keyof LookupResponse, 'is_bogon'>, Exclude<ke
     company: 'company', hostname: 'hostname', abuse: 'abuse',
 };
 
-export function toResult(body: LookupResponse): Result {
+export function toResult(body: WireLookupResponse): Result {
     const out: Record<string, unknown> = {};
     for (const [from, to] of Object.entries<string>(RESULT_NAMES)) {
         if (from in body && body[from as keyof LookupResponse] !== undefined) {
             out[to] = body[from as keyof LookupResponse];
         }
+    }
+    // `Asn.type` keeps its `string`: the spec stopped requiring it and Unlimited's answer omits it, so
+    // an absent one reads as empty here, in a copy that leaves `raw.asn` as served.
+    if (body.asn !== undefined && body.asn.type === undefined) {
+        out['asn'] = { ...body.asn, type: '' };
     }
     out['isBogon'] = body.is_bogon === true;
     out['raw'] = body;
