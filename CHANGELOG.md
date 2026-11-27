@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.9.0 - 2026-11-27
+
+### Features
+
+- Read a keyless answer without the AS's type ([`7446809`](https://github.com/vpndetection-io/sdk-web/commit/7446809748f4104d39585c8e8c13869ce659fa47))
+
 ## 1.8.1 - 2026-11-25
 
 ### Fixes
