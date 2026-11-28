@@ -148,7 +148,7 @@ const client = new VPNDetection({ cache: { max: 50_000, ttlMs: 6 * 60 * 60 * 100
 const clientNoCache = new VPNDetection({ cache: false });
 ```
 
-An answer with `trialExpired` or `capReached` true is cached for a minute at most, in memory and in a `store`, so a renewed trial or a raised cap reaches you within a minute.
+An answer with `trialExpired` or `capReached` true is cached for a minute at most, in memory and in a `store`, so a change to your trial, plan or cap reaches you within a minute.
 
 ### Keeping answers across a reload
 

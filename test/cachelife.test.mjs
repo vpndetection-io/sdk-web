@@ -1,6 +1,6 @@
-// A spent trial's or a reached cap's answer ends with a renewed trial or a raised
-// cap, so it is cached for a minute at most, in memory and in a store, rather than
-// for the client's TTL.
+// A spent trial's or a reached cap's answer can change as soon as the organization's
+// trial, plan or cap does, so it is cached for a minute at most, in memory and in a
+// store, rather than for the client's TTL.
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
